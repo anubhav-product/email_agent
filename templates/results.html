@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Results - LeadFinder AI</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; padding: 40px 20px; }
+        .header { text-align: center; color: white; margin-bottom: 40px; }
+        .header h1 { font-size: 42px; font-weight: 700; margin-bottom: 10px; text-shadow: 0 2px 10px rgba(0,0,0,0.2); }
+        .header .count { font-size: 64px; font-weight: 800; margin: 20px 0; }
+        .header p { font-size: 18px; opacity: 0.95; }
+        .container { background: white; padding: 50px 45px; border-radius: 20px; box-shadow: 0 25px 80px rgba(0,0,0,0.3); max-width: 800px; margin: 0 auto; }
+        .success-icon { text-align: center; font-size: 80px; margin-bottom: 30px; animation: bounce 1s; }
+        @keyframes bounce { 0%, 20%, 50%, 80%, 100% { transform: translateY(0); } 40% { transform: translateY(-20px); } 60% { transform: translateY(-10px); } }
+        .actions { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 30px; }
+        .action-btn { display: flex; align-items: center; justify-content: center; gap: 10px; padding: 18px; border-radius: 12px; text-decoration: none; font-weight: 600; transition: all 0.3s; border: none; cursor: pointer; font-size: 15px; }
+        .btn-primary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4); }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6); }
+        .btn-secondary { background: white; color: #667eea; border: 2px solid #667eea; }
+        .btn-secondary:hover { background: #f8f9fa; }
+        .preview { background: #f8f9fa; padding: 25px; border-radius: 12px; margin-bottom: 25px; max-height: 400px; overflow-y: auto; }
+        .preview h3 { color: #333; margin-bottom: 15px; font-size: 18px; }
+        .preview pre { font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.8; color: #666; white-space: pre-wrap; }
+        .tips { background: linear-gradient(135deg, #e0e7ff 0%, #e0c3fc 100%); padding: 20px; border-radius: 12px; margin-top: 25px; }
+        .tips h4 { color: #667eea; margin-bottom: 12px; font-size: 16px; }
+        .tips ul { margin-left: 20px; color: #555; font-size: 14px; line-height: 2; }
+        .nav { text-align: center; margin-top: 20px; }
+        .nav a { color: #667eea; text-decoration: none; font-weight: 600; }
+        .nav a:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>✅ Success!</h1>
+        <div class="count">{{ count }}</div>
+        <p>High-quality leads generated and ready to review</p>
+    </div>
+    
+    <div class="container">
+        <div class="success-icon">🎉</div>
+        
+        <div class="actions">
+            <a href="{{ url_for('download', filename='send_sheet.csv') }}" class="action-btn btn-primary">
+                <span>📊</span> Download CSV
+            </a>
+            <a href="{{ url_for('download', filename='send_sheet.md') }}" class="action-btn btn-secondary">
+                <span>📄</span> Download Markdown
+            </a>
+        </div>
+        
+        <div class="preview">
+            <h3>📧 Email Preview (First Lead)</h3>
+            <pre>{{ content[:500] if content else 'No preview available' }}...</pre>
+        </div>
+        
+        <div class="tips">
+            <h4>💡 Next Steps:</h4>
+            <ul>
+                <li>✅ Review all emails in send_sheet.md</li>
+                <li>✅ Personalize top 5-10 emails for better response</li>
+                <li>✅ Check Gmail drafts if you created them</li>
+                <li>✅ Send 10-15 emails per day (avoid spam filters)</li>
+                <li>✅ Follow up after 3-5 days if no response</li>
+            </ul>
+        </div>
+        
+        <div class="nav">
+            <a href="{{ url_for('index') }}">← Generate More Leads</a> | 
+            <a href="{{ url_for('batch') }}">📊 Batch Process</a>
+        </div>
+    </div>
+</body>
+</html>

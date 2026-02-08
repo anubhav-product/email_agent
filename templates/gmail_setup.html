@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gmail Integration - LeadFinder AI</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; padding: 40px 20px; }
+        
+        .container { max-width: 800px; margin: 0 auto; }
+        
+        /* Card */
+        .card { background: white; border-radius: 20px; padding: 50px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
+        
+        /* Header */
+        .header { text-align: center; margin-bottom: 40px; }
+        .header h1 { font-size: 36px; color: #333; margin-bottom: 10px; }
+        .header .icon { font-size: 72px; margin-bottom: 20px; }
+        .header p { color: #666; font-size: 18px; line-height: 1.6; }
+        
+        /* Status Badge */
+        .status-badge { display: inline-block; padding: 12px 24px; border-radius: 30px; font-weight: 600; margin-top: 20px; font-size: 16px; }
+        .status-badge.connected { background: #d4edda; color: #155724; border: 2px solid #c3e6cb; }
+        .status-badge.disconnected { background: #fff3cd; color: #856404; border: 2px solid #ffeaa7; }
+        
+        /* Info Box */
+        .info-box { background: #f8f9fa; padding: 30px; border-radius: 15px; margin: 30px 0; border-left: 5px solid #667eea; }
+        .info-box h3 { color: #667eea; margin-bottom: 15px; font-size: 20px; }
+        .info-box p { color: #555; line-height: 1.8; margin-bottom: 10px; }
+        .info-box ul { margin-left: 25px; color: #555; line-height: 2; }
+        .info-box ul li { margin-bottom: 10px; }
+        
+        /* User Info */
+        .user-info { background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%); padding: 25px; border-radius: 15px; margin: 25px 0; }
+        .user-info h4 { color: #2e7d32; margin-bottom: 15px; font-size: 18px; }
+        .user-info .detail { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid rgba(0,0,0,0.1); }
+        .user-info .detail:last-child { border-bottom: none; }
+        .user-info .label { font-weight: 600; color: #1b5e20; }
+        .user-info .value { color: #388e3c; font-family: 'Courier New', monospace; }
+        
+        /* Setup Steps */
+        .setup-steps { margin: 40px 0; }
+        .step { background: #f8f9fa; padding: 25px; border-radius: 12px; margin-bottom: 20px; border-left: 5px solid #e0e0e0; transition: all 0.3s; }
+        .step.completed { border-left-color: #4caf50; background: #f1f8f4; }
+        .step-header { display: flex; align-items: center; gap: 15px; margin-bottom: 12px; }
+        .step-number { width: 40px; height: 40px; border-radius: 50%; background: #e0e0e0; color: #666; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 18px; }
+        .step.completed .step-number { background: #4caf50; color: white; }
+        .step h3 { font-size: 20px; color: #333; flex: 1; }
+        .step-badge { background: #4caf50; color: white; padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: 700; }
+        .step p { color: #666; line-height: 1.6; margin-bottom: 12px; }
+        .step a { color: #667eea; text-decoration: none; font-weight: 600; display: inline-block; margin-top: 8px; }
+        .step a:hover { text-decoration: underline; }
+        
+        /* Buttons */
+        .btn-group { display: flex; gap: 15px; margin-top: 30px; flex-wrap: wrap; }
+        .btn { padding: 16px 32px; border-radius: 12px; font-size: 16px; font-weight: 600; cursor: pointer; border: none; text-decoration: none; display: inline-block; transition: all 0.3s; text-align: center; flex: 1; min-width: 200px; }
+        .btn-primary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4); }
+        .btn-primary:hover { transform: translateY(-2px) scale(1.02); box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6); }
+        .btn-secondary { background: white; color: #667eea; border: 2px solid #667eea; }
+        .btn-secondary:hover { background: #f8f9fa; }
+        .btn-danger { background: #dc3545; color: white; }
+        .btn-danger:hover { background: #c82333; }
+        .btn-success { background: #28a745; color: white; }
+        .btn-success:hover { background: #218838; }
+        
+        /* Alert */
+        .alert { padding: 20px; border-radius: 12px; margin-bottom: 25px; }
+        .alert.success { background: #d4edda; color: #155724; border: 2px solid #c3e6cb; }
+        .alert.error { background: #f8d7da; color: #721c24; border: 2px solid #f5c6cb; }
+        .alert.info { background: #d1ecf1; color: #0c5460; border: 2px solid #bee5eb; }
+        .alert.warning { background: #fff3cd; color: #856404; border: 2px solid #ffeaa7; }
+        
+        /* Back Link */
+        .back-link { display: inline-block; margin-bottom: 20px; color: white; text-decoration: none; font-weight: 600; font-size: 16px; }
+        .back-link:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="{{ url_for('settings') }}" class="back-link">← Back to Settings</a>
+        
+        <div class="card">
+            <!-- Flash Messages -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert {{ category }}">{{ message }}</div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+            
+            <div class="header">
+                <div class="icon">📧</div>
+                <h1>Gmail Integration</h1>
+                <p>Connect your Gmail account to automatically create email drafts for your leads.</p>
+                
+                {% if connected %}
+                    <div class="status-badge connected">✓ Connected</div>
+                {% else %}
+                    <div class="status-badge disconnected">Not Connected</div>
+                {% endif %}
+            </div>
+            
+            {% if connected %}
+                <!-- Connected State -->
+                {% if user_info %}
+                <div class="user-info">
+                    <h4>📬 Connected Gmail Account</h4>
+                    <div class="detail">
+                        <span class="label">Email Address:</span>
+                        <span class="value">{{ user_info.email }}</span>
+                    </div>
+                    <div class="detail">
+                        <span class="label">Status:</span>
+                        <span class="value">✓ Active & Working</span>
+                    </div>
+                </div>
+                {% endif %}
+                
+                <div class="info-box">
+                    <h3>✨ What You Can Do Now</h3>
+                    <ul>
+                        <li><strong>Automatic Drafts:</strong> When generating leads, check "Create Gmail Drafts" and we'll automatically create email drafts in your Gmail</li>
+                        <li><strong>Review & Send:</strong> Open Gmail, review the drafts, make any edits, and send when ready</li>
+                        <li><strong>Stay Organized:</strong> All drafts are saved in your Gmail Drafts folder</li>
+                        <li><strong>Privacy First:</strong> We only have permission to create drafts, not read or send emails</li>
+                    </ul>
+                </div>
+                
+                <div class="btn-group">
+                    <a href="{{ url_for('index') }}" class="btn btn-success">🚀 Generate Leads with Gmail</a>
+                    <form method="POST" action="{{ url_for('disconnect_gmail') }}" style="flex: 1; min-width: 200px;">
+                        <button type="submit" class="btn btn-secondary" style="width: 100%;">🔌 Disconnect Gmail</button>
+                    </form>
+                </div>
+                
+            {% else %}
+                <!-- Not Connected State -->
+                
+                {% if not is_configured %}
+                    <!-- System Not Configured -->
+                    <div class="alert warning">
+                        <strong>⚠️ Administrator Setup Required</strong><br>
+                        Gmail OAuth is not configured yet. A system administrator needs to complete the one-time setup below.
+                    </div>
+                    
+                    <div class="setup-steps">
+                        <h2 style="margin-bottom: 25px; color: #333;">🛠️ Administrator Setup Steps</h2>
+                        
+                        {% for step in setup_instructions.steps %}
+                        <div class="step {% if step.completed %}completed{% endif %}">
+                            <div class="step-header">
+                                <div class="step-number">{{ step.number }}</div>
+                                <h3>{{ step.title }}</h3>
+                                {% if step.completed %}
+                                    <span class="step-badge">✓ Done</span>
+                                {% endif %}
+                            </div>
+                            <p>{{ step.description }}</p>
+                            <a href="{{ step.link }}" target="_blank">{{ step.link }} →</a>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    
+                    <div class="info-box">
+                        <h3>📝 Quick Setup Summary</h3>
+                        <p>Once the administrator completes the setup above and places <code>credentials.json</code> in the app directory, users will be able to connect their Gmail accounts with one click.</p>
+                        <p style="margin-top: 15px;"><strong>Need help?</strong> See <a href="https://github.com/your-repo/wiki/Gmail-Setup" target="_blank">full documentation →</a></p>
+                    </div>
+                    
+                {% else %}
+                    <!-- Ready to Connect -->
+                    <div class="alert success">
+                        <strong>✓ System Configured!</strong><br>
+                        Gmail OAuth is set up and ready. Click the button below to connect your Gmail account.
+                    </div>
+                    
+                    <div class="info-box">
+                        <h3>🔐 What Happens When You Connect?</h3>
+                        <ul>
+                            <li><strong>Step 1:</strong> You'll be redirected to Google's secure login page</li>
+                            <li><strong>Step 2:</strong> Sign in with your Gmail account</li>
+                            <li><strong>Step 3:</strong> Authorize this app to create email drafts (no reading or sending)</li>
+                            <li><strong>Step 4:</strong> You'll be redirected back here - all done!</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="info-box" style="border-left-color: #4caf50; background: #f1f8f4;">
+                        <h3>✅ Benefits of Gmail Integration</h3>
+                        <ul>
+                            <li>Save time - no copy-pasting emails manually</li>
+                            <li>Review before sending - all emails created as drafts</li>
+                            <li>Professional workflow - send from your Gmail account</li>
+                            <li>Secure - OAuth 2.0 industry standard authentication</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="btn-group">
+                        <a href="{{ url_for('connect_gmail') }}" class="btn btn-primary">🔗 Connect Gmail Account</a>
+                        <a href="{{ url_for('settings') }}" class="btn btn-secondary">← Back to Settings</a>
+                    </div>
+                {% endif %}
+                
+            {% endif %}
+        </div>
+    </div>
+</body>
+</html>

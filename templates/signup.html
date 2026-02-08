@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Up - LeadFinder AI</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
+        .container { background: white; padding: 50px; border-radius: 20px; box-shadow: 0 25px 80px rgba(0,0,0,0.3); max-width: 450px; width: 100%; }
+        h1 { font-size: 32px; margin-bottom: 10px; color: #333; text-align: center; }
+        .subtitle { text-align: center; color: #666; margin-bottom: 40px; font-size: 15px; }
+        .form-group { margin-bottom: 25px; }
+        label { display: block; margin-bottom: 8px; color: #333; font-weight: 600; font-size: 14px; }
+        input { width: 100%; padding: 14px; border: 2px solid #e0e0e0; border-radius: 10px; font-size: 15px; transition: all 0.3s; font-family: 'Inter', sans-serif; }
+        input:focus { outline: none; border-color: #667eea; box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1); }
+        .btn { width: 100%; padding: 16px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 10px; font-size: 16px; font-weight: 600; cursor: pointer; transition: all 0.3s; box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4); }
+        .btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6); }
+        .flash { padding: 16px; margin-bottom: 25px; border-radius: 10px; font-weight: 500; }
+        .flash.success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .flash.error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .footer-link { text-align: center; margin-top: 25px; color: #666; font-size: 14px; }
+        .footer-link a { color: #667eea; text-decoration: none; font-weight: 600; }
+        .footer-link a:hover { text-decoration: underline; }
+        .benefits { background: #f8f9fa; padding: 20px; border-radius: 10px; margin-bottom: 30px; }
+        .benefits h3 { font-size: 16px; color: #667eea; margin-bottom: 12px; }
+        .benefits ul { margin-left: 20px; }
+        .benefits li { color: #666; font-size: 14px; margin: 8px 0; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 Create Account</h1>
+        <p class="subtitle">Start generating leads in 30 seconds. No credit card required.</p>
+        
+        <div class="benefits">
+            <h3>What you get:</h3>
+            <ul>
+                <li>✅ Unlimited lead searches</li>
+                <li>✅ AI-powered email generation</li>
+                <li>✅ Multi-domain support (PM, Eng, Consulting, DS)</li>
+                <li>✅ Gmail integration & drafts</li>
+                <li>✅ Batch processing</li>
+                <li>✅ CSV/Markdown export</li>
+            </ul>
+        </div>
+        
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="flash {{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        
+        <form method="POST">
+            <div class="form-group">
+                <label for="name">Full Name</label>
+                <input type="text" id="name" name="name" placeholder="John Doe" autocomplete="name">
+            </div>
+            
+            <div class="form-group">
+                <label for="email">Email Address *</label>
+                <input type="email" id="email" name="email" required placeholder="you@example.com" autocomplete="email">
+            </div>
+            
+            <div class="form-group">
+                <label for="password">Password *</label>
+                <input type="password" id="password" name="password" required placeholder="Min 8 characters" autocomplete="new-password">
+            </div>
+            
+            <button type="submit" class="btn">Create Account & Start Free</button>
+        </form>
+        
+        <div class="footer-link">
+            Already have an account? <a href="{{ url_for('auth.login') }}">Log in</a>
+        </div>
+        
+        <div class="footer-link" style="margin-top: 15px;">
+            <a href="{{ url_for('landing') }}">← Back to Home</a>
+        </div>
+    </div>
+</body>
+</html>

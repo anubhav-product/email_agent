@@ -1,0 +1,74 @@
+target_roles:
+  - Founder
+  - Co-founder
+  - Head of Product
+  - Chief Product Officer
+  - Group Product Manager
+  - Senior Product Manager
+  - Product Manager
+excluded_roles:
+  - Recruiter
+  - HR
+  - People Operations
+  - Talent
+  - Marketing
+  - Sales
+min_email_confidence: 40
+portfolio_url: https://portfolio-o5n7.onrender.com
+candidate_background_summary: "Anubhav, BITS Goa PM building AI-powered analytics"
+tone: professional
+use_openai_drafts: true
+openai_model: gpt-4o-mini
+sender_email: you@example.com
+use_gmail_drafts: false
+gmail_credentials_path: credentials.json
+gmail_token_path: token.json
+
+# Domain-specific role profiles
+domains:
+  product_management:
+    name: "Product Management"
+    target_roles:
+      - Founder
+      - Co-founder
+      - Head of Product
+      - Chief Product Officer
+      - VP Product
+      - Director of Product
+      - Group Product Manager
+      - Senior Product Manager
+      - Product Manager
+    background: "BITS Goa graduate, currently working as PM building AI-powered analytics"
+    
+  consulting:
+    name: "Consulting"
+    target_roles:
+      - Partner
+      - Principal
+      - Director
+      - Senior Consultant
+      - Consultant
+      - Strategy Manager
+      - Business Analyst
+    background: "BITS Goa graduate with product and analytics experience seeking consulting roles"
+    
+  engineering:
+    name: "Software Engineering"
+    target_roles:
+      - CTO
+      - VP Engineering
+      - Engineering Manager
+      - Tech Lead
+      - Senior Software Engineer
+      - Software Engineer
+    background: "BITS Goa graduate with PM and technical background"
+    
+  data_science:
+    name: "Data Science & Analytics"
+    target_roles:
+      - Head of Data
+      - Data Science Manager
+      - Senior Data Scientist
+      - Data Scientist
+      - Analytics Manager
+    background: "BITS Goa graduate building AI/ML solutions"

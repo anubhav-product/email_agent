@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LeadFinder AI - Automated Outreach Agent</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; padding: 40px 20px; }
+        .header { text-align: center; color: white; margin-bottom: 40px; }
+        .header h1 { font-size: 42px; font-weight: 700; margin-bottom: 10px; text-shadow: 0 2px 10px rgba(0,0,0,0.2); }
+        .header p { font-size: 18px; opacity: 0.95; }
+        .container { background: white; padding: 50px 45px; border-radius: 20px; box-shadow: 0 25px 80px rgba(0,0,0,0.3); max-width: 600px; margin: 0 auto; }
+        .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 35px; }
+        .stat-card { background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); padding: 20px; border-radius: 12px; text-align: center; }
+        .stat-card .number { font-size: 28px; font-weight: 700; color: #667eea; margin-bottom: 5px; }
+        .stat-card .label { font-size: 12px; color: #666; text-transform: uppercase; letter-spacing: 0.5px; }
+        .form-group { margin-bottom: 25px; }
+        label { display: block; margin-bottom: 10px; color: #333; font-weight: 600; font-size: 14px; }
+        select, input[type="text"] { width: 100%; padding: 14px 16px; border: 2px solid #e0e0e0; border-radius: 10px; font-size: 15px; transition: all 0.3s; font-family: 'Inter', sans-serif; }
+        select:focus, input[type="text"]:focus { outline: none; border-color: #667eea; box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1); }
+        select { cursor: pointer; }
+        small { display: block; margin-top: 8px; color: #666; font-size: 13px; line-height: 1.5; }
+        .checkbox-group { display: flex; align-items: center; gap: 12px; background: #f8f9fa; padding: 15px; border-radius: 10px; }
+        input[type="checkbox"] { width: 22px; height: 22px; cursor: pointer; accent-color: #667eea; }
+        .checkbox-group label { margin: 0; font-weight: 500; }
+        button { width: 100%; padding: 16px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 10px; font-size: 16px; font-weight: 600; cursor: pointer; transition: all 0.3s; box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4); }
+        button:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6); }
+        button:active { transform: translateY(0); }
+        .flash { padding: 16px 20px; margin-bottom: 25px; border-radius: 10px; font-weight: 500; display: flex; align-items: center; gap: 10px; }
+        .flash.success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .flash.error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .features { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 30px; }
+        .feature { background: #f8f9fa; padding: 15px; border-radius: 10px; font-size: 13px; }
+        .feature strong { display: block; color: #667eea; margin-bottom: 5px; font-size: 14px; }
+        .footer { text-align: center; margin-top: 30px; padding-top: 25px; border-top: 1px solid #e0e0e0; color: #666; font-size: 13px; }
+        .emoji { font-size: 20px; margin-right: 5px; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🚀 LeadFinder AI</h1>
+        <p>Automated outreach agent for job seekers & recruiters</p>
+        <div style="margin-top: 15px; display: flex; justify-content: center; gap: 15px; flex-wrap: wrap;">
+            <a href="{{ url_for('dashboard') }}" style="color: white; text-decoration: none; background: rgba(255,255,255,0.2); padding: 10px 20px; border-radius: 8px; font-weight: 600;">📊 Dashboard</a>
+            <a href="{{ url_for('batch') }}" style="color: white; text-decoration: none; background: rgba(255,255,255,0.2); padding: 10px 20px; border-radius: 8px; font-weight: 600;">📋 Batch</a>
+            <a href="{{ url_for('gmail_setup') }}" style="color: white; text-decoration: none; background: rgba(255,255,255,0.2); padding: 10px 20px; border-radius: 8px; font-weight: 600;">📧 Gmail</a>
+            <a href="{{ url_for('settings') }}" style="color: white; text-decoration: none; background: rgba(255,255,255,0.2); padding: 10px 20px; border-radius: 8px; font-weight: 600;">⚙️ Settings</a>
+            <a href="{{ url_for('auth.logout') }}" style="color: white; text-decoration: none; background: rgba(255,255,255,0.2); padding: 10px 20px; border-radius: 8px; font-weight: 600;">Logout</a>
+        </div>
+        {% if provider_count is defined %}
+        <div style="margin-top: 20px; padding: 12px 24px; background: {% if provider_count == 0 %}#ff5252{% elif provider_count < 3 %}#ff9800{% else %}#4caf50{% endif %}; border-radius: 8px; display: inline-block; color: white; font-weight: 600;">
+            {% if provider_count == 0 %}⚠️ No email providers configured - <a href="{{ url_for('settings') }}" style="color: white; text-decoration: underline;">Add API keys</a>
+            {% elif provider_count < 3 %}✓ {{ provider_count }} provider(s) active - <a href="{{ url_for('settings') }}" style="color: white; text-decoration: underline;">Add more</a>
+            {% else %}✅ All {{ provider_count }} providers active{% endif %}
+        </div>
+        {% endif %}
+    </div>
+    
+    <div class="container">
+        <div class="stats">
+            <div class="stat-card">
+                <div class="number">10+</div>
+                <div class="label">Leads/Search</div>
+            </div>
+            <div class="stat-card">
+                <div class="number">4</div>
+                <div class="label">Domains</div>
+            </div>
+            <div class="stat-card">
+                <div class="number">AI</div>
+                <div class="label">Powered</div>
+            </div>
+        </div>
+        
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="flash {{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        
+        <form action="{{ url_for('generate') }}" method="POST">
+            <div class="form-group">
+                <label for="domain_type"><span class="emoji">🎯</span>Career Domain *</label>
+                <select id="domain_type" name="domain_type" required>
+                    <option value="product_management">Product Management</option>
+                    <option value="consulting">Consulting & Strategy</option>
+                    <option value="engineering">Software Engineering</option>
+                    <option value="data_science">Data Science & Analytics</option>
+                </select>
+                <small>💡 Choose your target career path - we'll find relevant decision-makers</small>
+            </div>
+            
+            <div class="form-group">
+                <label for="company_name"><span class="emoji">🏢</span>Company Name (Optional)</label>
+                <input type="text" id="company_name" name="company_name" placeholder="e.g., Stripe, Airbnb, Google">
+                <small>Leave blank and we'll detect it from domain</small>
+            </div>
+            
+            <div class="form-group">
+                <label for="domain"><span class="emoji">🌐</span>Company Domain *</label>
+                <input type="text" id="domain" name="domain" placeholder="stripe.com" required>
+                <small>✨ Try: airbnb.com, notion.so, figma.com for 10+ leads</small>
+            </div>
+            
+            <div class="form-group">
+                <label for="portfolio_url"><span class="emoji">💼</span>Your Portfolio URL (Optional)</label>
+                <input type="text" id="portfolio_url" name="portfolio_url" placeholder="https://yourname.com">
+                <small>📎 Added to email signature - showcases your work</small>
+            </div>
+            
+            <div class="form-group">
+                <label for="resume_url"><span class="emoji">📄</span>Resume (Optional)</label>
+                <input type="text" id="resume_url" name="resume_url" placeholder="https://drive.google.com/your-resume OR /path/to/resume.pdf">
+                <small>🔗 URL = Link in email | 📎 Local path = Attached to Gmail drafts</small>
+            </div>
+            
+            <div class="form-group">
+                <label for="custom_subject"><span class="emoji">✉️</span>Email Subject (Optional)</label>
+                <input type="text" id="custom_subject" name="custom_subject" placeholder="Leave blank for AI-generated subjects">
+                <small>🤖 AI creates personalized subjects if you leave this empty</small>
+            </div>
+            
+            <div class="form-group">
+                <label><span class="emoji">📧</span>Gmail Draft Creation</label>
+                <div class="checkbox-group" style="background: {% if user.has_gmail_connected() %}#e8f5e9{% else %}#fff3cd{% endif %}; border: 2px solid {% if user.has_gmail_connected() %}#4caf50{% else %}#ffc107{% endif %};">
+                    <input type="checkbox" id="create_gmail" name="create_gmail" {% if not user.has_gmail_connected() %}disabled{% endif %}>
+                    <label for="create_gmail" style="flex: 1;">
+                        {% if user.has_gmail_connected() %}
+                            ✓ Create drafts in Gmail automatically
+                        {% else %}
+                            ⚠️ Gmail not connected - <a href="{{ url_for('gmail_setup') }}" style="color: #667eea; font-weight: 600;">Set up now</a>
+                        {% endif %}
+                    </label>
+                </div>
+                {% if user.has_gmail_connected() %}
+                <small style="color: #2e7d32;">✓ Gmail connected - Drafts will be created automatically (review before sending)</small>
+                {% else %}
+                <small style="color: #856404;">Connect Gmail to enable automatic draft creation. <a href="{{ url_for('gmail_setup') }}" style="color: #667eea; font-weight: 600;">Quick setup →</a></small>
+                {% endif %}
+            </div>
+            
+            <button type="submit">🚀 Generate Leads & Drafts</button>
+        </form>
+        
+        <div style="text-align: center; margin: 25px 0;">
+            <a href="{{ url_for('batch') }}" style="color: #667eea; font-weight: 600; text-decoration: none; font-size: 14px;">📊 Batch Process Multiple Companies →</a>
+        </div>
+        
+        <div class="features">
+            <div class="feature">
+                <strong>🎯 Smart Discovery</strong>
+                Hunter.io finds verified emails
+            </div>
+            <div class="feature">
+                <strong>🤖 AI Email Writer</strong>
+                GPT-4o generates personalized emails
+            </div>
+            <div class="feature">
+                <strong>📧 Gmail Drafts</strong>
+                Review before sending (no auto-send)
+            </div>
+            <div class="feature">
+                <strong>📊 Export CSV</strong>
+                Download for bulk processing
+            </div>
+        </div>
+        
+        <div class="footer">
+            <strong>🔒 100% Safe:</strong> No emails sent automatically. Human review required.<br>
+            Powered by Hunter.io, OpenAI GPT-4o-mini, and Gmail API
+        </div>
+    </div>
+</body>
+</html>

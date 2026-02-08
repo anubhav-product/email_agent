@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email Templates - LeadFinder AI</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background: #f5f7fa; color: #2d3748; }
+        
+        .nav { background: white; padding: 20px 40px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: center; }
+        .logo { font-size: 22px; font-weight: 700; color: #667eea; }
+        .nav-links { display: flex; gap: 25px; align-items: center; }
+        .nav-links a { color: #4a5568; text-decoration: none; font-weight: 500; transition: color 0.3s; }
+        .nav-links a:hover { color: #667eea; }
+        .btn-logout { background: #f7fafc; padding: 8px 18px; border-radius: 6px; }
+        
+        .container { max-width: 1200px; margin: 40px auto; padding: 0 20px; }
+        .header { margin-bottom: 30px; }
+        .header h1 { font-size: 32px; margin-bottom: 8px; }
+        .header p { color: #718096; font-size: 16px; }
+        
+        .btn { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 12px 24px; border-radius: 8px; border: none; cursor: pointer; font-weight: 600; font-size: 15px; transition: transform 0.2s; }
+        .btn:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3); }
+        .btn-secondary { background: #e2e8f0; color: #2d3748; }
+        .btn-secondary:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        .btn-danger { background: #f56565; color: white; }
+        .btn-small { padding: 8px 16px; font-size: 14px; }
+        
+        .card { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); margin-bottom: 25px; }
+        
+        .templates-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 20px; margin-top: 20px; }
+        .template-card { background: white; border: 2px solid #e2e8f0; border-radius: 10px; padding: 20px; position: relative; transition: all 0.3s; }
+        .template-card:hover { border-color: #667eea; box-shadow: 0 4px 12px rgba(102, 126, 234, 0.1); }
+        .template-card.default { border-color: #48bb78; background: linear-gradient(135deg, #f0fff4 0%, #e6fffa 100%); }
+        .template-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px; }
+        .template-name { font-size: 18px; font-weight: 600; color: #2d3748; }
+        .badge { display: inline-block; padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: 600; }
+        .badge-default { background: #48bb78; color: white; }
+        .badge-type { background: #667eea; color: white; }
+        .template-subject { font-size: 14px; color: #4a5568; margin-bottom: 10px; font-weight: 500; }
+        .template-body { font-size: 13px; color: #718096; line-height: 1.6; max-height: 100px; overflow: hidden; position: relative; }
+        .template-body::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 30px; background: linear-gradient(transparent, white); }
+        .template-stats { display: flex; gap: 15px; margin-top: 15px; padding-top: 15px; border-top: 1px solid #e2e8f0; font-size: 13px; color: #718096; }
+        .template-actions { display: flex; gap: 10px; margin-top: 15px; }
+        
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; margin-bottom: 8px; font-weight: 600; color: #2d3748; font-size: 14px; }
+        .form-group input, .form-group textarea, .form-group select { width: 100%; padding: 12px; border: 2px solid #e2e8f0; border-radius: 8px; font-family: inherit; font-size: 14px; transition: border-color 0.3s; }
+        .form-group input:focus, .form-group textarea:focus, .form-group select:focus { outline: none; border-color: #667eea; }
+        .form-group textarea { resize: vertical; min-height: 150px; }
+        .form-group small { display: block; margin-top: 5px; color: #718096; font-size: 13px; }
+        
+        .checkbox-group { display: flex; align-items: center; gap: 10px; }
+        .checkbox-group input[type="checkbox"] { width: auto; }
+        
+        .flash-messages { margin-bottom: 20px; }
+        .flash { padding: 15px 20px; border-radius: 8px; margin-bottom: 10px; font-weight: 500; }
+        .flash.success { background: #c6f6d5; color: #22543d; border-left: 4px solid #38a169; }
+        .flash.error { background: #fed7d7; color: #742a2a; border-left: 4px solid #e53e3e; }
+        .flash.info { background: #bee3f8; color: #2c5282; border-left: 4px solid #3182ce; }
+        
+        .help-box { background: #edf2f7; padding: 20px; border-radius: 8px; border-left: 4px solid #667eea; margin-top: 20px; }
+        .help-box h4 { margin-bottom: 12px; color: #2d3748; }
+        .help-box ul { margin-left: 20px; line-height: 1.8; color: #4a5568; }
+        .help-box code { background: #cbd5e0; padding: 2px 6px; border-radius: 3px; font-family: monospace; font-size: 13px; }
+        
+        .modal { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center; }
+        .modal.active { display: flex; }
+        .modal-content { background: white; padding: 40px; border-radius: 12px; max-width: 600px; width: 90%; max-height: 90vh; overflow-y: auto; }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
+        .modal-close { font-size: 28px; cursor: pointer; color: #718096; }
+        
+        .empty-state { text-align: center; padding: 60px 20px; }
+        .empty-state svg { width: 120px; height: 120px; margin-bottom: 20px; opacity: 0.3; }
+        .empty-state h3 { font-size: 24px; margin-bottom: 10px; color: #2d3748; }
+        .empty-state p { color: #718096; margin-bottom: 25px; }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <div class="nav">
+        <div class="logo">📧 LeadFinder AI</div>
+        <div class="nav-links">
+            <a href="{{ url_for('index') }}">Dashboard</a>
+            <a href="{{ url_for('batch') }}">Batch</a>
+            <a href="{{ url_for('templates') }}" style="color: #667eea;">Templates</a>
+            <a href="{{ url_for('settings') }}">Settings</a>
+            <a href="{{ url_for('logout') }}" class="btn-logout">Logout</a>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="flash-messages">
+                    {% for category, message in messages %}
+                        <div class="flash {{ category }}">{{ message }}</div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        <!-- Header -->
+        <div class="header">
+            <h1>📧 Email Templates</h1>
+            <p>Create and manage custom email templates for your lead outreach</p>
+        </div>
+
+        <!-- Create Template Button -->
+        <div style="margin-bottom: 30px;">
+            <button class="btn" onclick="openModal('createModal')">+ Create New Template</button>
+        </div>
+
+        <!-- Templates -->
+        {% if templates %}
+            <div class="templates-grid">
+                {% for template in templates %}
+                    <div class="template-card {% if template.is_default %}default{% endif %}">
+                        <div class="template-header">
+                            <div class="template-name">{{ template.name }}</div>
+                            <div>
+                                {% if template.is_default %}
+                                    <span class="badge badge-default">DEFAULT</span>
+                                {% endif %}
+                                {% if template.domain_type %}
+                                    <span class="badge badge-type">{{ template.domain_type.upper() }}</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="template-subject">Subject: {{ template.subject }}</div>
+                        <div class="template-body">{{ template.body }}</div>
+                        <div class="template-stats">
+                            <span>📅 {{ template.created_at.strftime('%b %d, %Y') }}</span>
+                            <span>🔄 Used {{ template.times_used }} times</span>
+                        </div>
+                        <div class="template-actions">
+                            <button class="btn btn-small btn-secondary" onclick="editTemplate({{ template.id }}, '{{ template.name }}', '{{ template.subject }}', `{{ template.body }}`, '{{ template.domain_type or '' }}', {{ template.is_default|lower }})">✏️ Edit</button>
+                            <form method="POST" action="{{ url_for('delete_template', template_id=template.id) }}" style="display: inline;" onsubmit="return confirm('Delete this template?');">
+                                <button type="submit" class="btn btn-small btn-danger">🗑️ Delete</button>
+                            </form>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="empty-state">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                </svg>
+                <h3>No Templates Yet</h3>
+                <p>Create your first email template to streamline your outreach</p>
+                <button class="btn" onclick="openModal('createModal')">+ Create Your First Template</button>
+            </div>
+        {% endif %}
+
+        <!-- Help Box -->
+        <div class="help-box">
+            <h4>💡 Template Variables</h4>
+            <p>Use these placeholders in your subject and body. They'll be automatically replaced:</p>
+            <ul>
+                <li><code>{{first_name}}</code> - Lead's first name</li>
+                <li><code>{{last_name}}</code> - Lead's last name</li>
+                <li><code>{{company_name}}</code> - Company name</li>
+                <li><code>{{role}}</code> - Lead's job title</li>
+                <li><code>{{domain}}</code> - Company domain</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Create Template Modal -->
+    <div id="createModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Create New Template</h2>
+                <span class="modal-close" onclick="closeModal('createModal')">&times;</span>
+            </div>
+            <form method="POST" action="{{ url_for('create_template') }}">
+                <div class="form-group">
+                    <label>Template Name *</label>
+                    <input type="text" name="name" required placeholder="e.g., PM Outreach">
+                    <small>Give your template a descriptive name</small>
+                </div>
+                <div class="form-group">
+                    <label>Domain Type (Optional)</label>
+                    <select name="domain_type">
+                        <option value="">All Types</option>
+                        <option value="pm">Product Management</option>
+                        <option value="consulting">Consulting</option>
+                        <option value="engineering">Engineering</option>
+                        <option value="sales">Sales</option>
+                    </select>
+                    <small>Limit this template to specific lead types</small>
+                </div>
+                <div class="form-group">
+                    <label>Email Subject *</label>
+                    <input type="text" name="subject" required placeholder="e.g., Exploring PM roles at {{company_name}}">
+                    <small>Use template variables like {{company_name}}</small>
+                </div>
+                <div class="form-group">
+                    <label>Email Body *</label>
+                    <textarea name="body" required placeholder="Hi {{first_name}},&#10;&#10;I noticed {{company_name}} is hiring for product roles..."></textarea>
+                    <small>Use {{first_name}}, {{company_name}}, {{role}}, etc.</small>
+                </div>
+                <div class="form-group checkbox-group">
+                    <input type="checkbox" name="is_default" id="is_default_create">
+                    <label for="is_default_create" style="margin: 0;">Set as default template</label>
+                </div>
+                <div style="display: flex; gap: 10px; justify-content: flex-end;">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('createModal')">Cancel</button>
+                    <button type="submit" class="btn">Create Template</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Edit Template Modal -->
+    <div id="editModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Edit Template</h2>
+                <span class="modal-close" onclick="closeModal('editModal')">&times;</span>
+            </div>
+            <form method="POST" id="editForm">
+                <div class="form-group">
+                    <label>Template Name *</label>
+                    <input type="text" name="name" id="edit_name" required>
+                </div>
+                <div class="form-group">
+                    <label>Domain Type (Optional)</label>
+                    <select name="domain_type" id="edit_domain_type">
+                        <option value="">All Types</option>
+                        <option value="pm">Product Management</option>
+                        <option value="consulting">Consulting</option>
+                        <option value="engineering">Engineering</option>
+                        <option value="sales">Sales</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Email Subject *</label>
+                    <input type="text" name="subject" id="edit_subject" required>
+                </div>
+                <div class="form-group">
+                    <label>Email Body *</label>
+                    <textarea name="body" id="edit_body" required></textarea>
+                </div>
+                <div class="form-group checkbox-group">
+                    <input type="checkbox" name="is_default" id="edit_is_default">
+                    <label for="edit_is_default" style="margin: 0;">Set as default template</label>
+                </div>
+                <div style="display: flex; gap: 10px; justify-content: flex-end;">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('editModal')">Cancel</button>
+                    <button type="submit" class="btn">Update Template</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        function openModal(id) {
+            document.getElementById(id).classList.add('active');
+        }
+        
+        function closeModal(id) {
+            document.getElementById(id).classList.remove('active');
+        }
+        
+        function editTemplate(id, name, subject, body, domainType, isDefault) {
+            document.getElementById('editForm').action = `/templates/${id}/edit`;
+            document.getElementById('edit_name').value = name;
+            document.getElementById('edit_subject').value = subject;
+            document.getElementById('edit_body').value = body;
+            document.getElementById('edit_domain_type').value = domainType;
+            document.getElementById('edit_is_default').checked = isDefault;
+            openModal('editModal');
+        }
+        
+        // Close modal on escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                document.querySelectorAll('.modal').forEach(m => m.classList.remove('active'));
+            }
+        });
+        
+        // Close modal on background click
+        document.querySelectorAll('.modal').forEach(modal => {
+            modal.addEventListener('click', function(e) {
+                if (e.target === this) {
+                    closeModal(this.id);
+                }
+            });
+        });
+    </script>
+</body>
+</html>

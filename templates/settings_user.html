@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settings - LeadFinder AI</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background: #f5f7fa; min-height: 100vh; }
+        
+        /* Header */
+        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .header-content { max-width: 1200px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; }
+        .logo { font-size: 24px; font-weight: 700; }
+        .nav-links { display: flex; gap: 15px; flex-wrap: wrap; }
+        .nav-links a { color: white; text-decoration: none; background: rgba(255,255,255,0.2); padding: 10px 20px; border-radius: 8px; font-weight: 600; }
+        .nav-links a:hover { background: rgba(255,255,255,0.3); }
+        
+        /* Container */
+        .container { max-width: 1000px; margin: 40px auto; padding: 0 20px; }
+        
+        /* Alert Box */
+        .alert { padding: 20px; border-radius: 12px; margin-bottom: 30px; display: flex; align-items: start; gap: 15px; }
+        .alert.info { background: #e3f2fd; color: #0d47a1; border: 2px solid #2196f3; }
+        .alert.success { background: #e8f5e9; color: #1b5e20; border: 2px solid #4caf50; }
+        .alert.warning { background: #fff3e0; color: #e65100; border: 2px solid #ff9800; }
+        .alert .icon { font-size: 28px; }
+        .alert-content h3 { margin-bottom: 8px; font-size: 18px; }
+        
+        /* Section */
+        .section { background: white; padding: 40px; border-radius: 16px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); margin-bottom: 30px; }
+        .section h2 { font-size: 24px; margin-bottom: 20px; color: #333; }
+        .section p { color: #666; line-height: 1.6; margin-bottom: 25px; }
+        
+        /* Form */
+        .form-group { margin-bottom: 25px; }
+        .form-group label { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; color: #333; font-weight: 600; font-size: 15px; }
+        .form-group label .badge { background: #4caf50; color: white; padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 700; }
+        .form-group label .badge.configured { background: #4caf50; }
+        .form-group label .badge.not-configured { background: #e0e0e0; color: #666; }
+        .form-group input[type="text"], .form-group input[type="password"] { width: 100%; padding: 14px 16px; border: 2px solid #e0e0e0; border-radius: 10px; font-size: 14px; font-family: 'Courier New', monospace; transition: all 0.3s; }
+        .form-group input:focus { outline: none; border-color: #667eea; box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1); }
+        .form-group small { display: block; margin-top: 8px; color: #666; font-size: 13px; }
+        .form-group small a { color: #667eea; text-decoration: none; font-weight: 600; }
+        .form-group small a:hover { text-decoration: underline; }
+        
+        /* Button */
+        .btn { padding: 16px 32px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 10px; font-size: 16px; font-weight: 600; cursor: pointer; transition: all 0.3s; box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4); }
+        .btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6); }
+        .btn-secondary { background: white; color: #667eea; border: 2px solid #667eea; box-shadow: none; }
+        .btn-secondary:hover { background: #f8f9fa; }
+        
+        /* Provider Card */
+        .provider-card { background: #f8f9fa; padding: 25px; border-radius: 12px; margin-bottom: 20px; border-left: 4px solid #e0e0e0; }
+        .provider-card.configured { border-left-color: #4caf50; background: #e8f5e9; }
+        .provider-card h3 { font-size: 20px; margin-bottom: 12px; color: #333; display: flex; align-items: center; gap: 10px; }
+        .provider-card p { color: #666; font-size: 14px; line-height: 1.6; margin-bottom: 15px; }
+        
+        /* Flash Messages */
+        .flash { padding: 16px 20px; margin-bottom: 25px; border-radius: 10px; font-weight: 500; }
+        .flash.success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .flash.error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .flash.info { background: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+        
+        /* Help Box */
+        .help-box { background: linear-gradient(135deg, #e8eaf6 0%, #c5cae9 100%); padding: 25px; border-radius: 12px; margin-top: 30px; border-left: 4px solid #667eea; }
+        .help-box h4 { color: #667eea; margin-bottom: 10px; font-size: 18px; }
+        .help-box ul { margin-left: 20px; color: #555; line-height: 2; }
+        .help-box ul li strong { color: #333; }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <div class="header">
+        <div class="header-content">
+            <div class="logo">⚙️ Settings & Configuration</div>
+            <div class="nav-links">
+                <a href="{{ url_for('index') }}">🎯 Generate Leads</a>
+                <a href="{{ url_for('dashboard') }}">📊 Dashboard</a>
+                <a href="{{ url_for('batch') }}">📋 Batch</a>
+                <a href="{{ url_for('gmail_setup') }}">📧 Gmail</a>
+                <a href="{{ url_for('auth.logout') }}">Logout</a>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Container -->
+    <div class="container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="flash {{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        
+        {% if user_provider_count == 0 %}
+        <div class="alert warning">
+            <div class="icon">👋</div>
+            <div class="alert-content">
+                <h3>Welcome! Let's Get You Set Up</h3>
+                <p>To find leads, you'll need to add your own API keys from email provider services. Don't worry - most providers offer <strong>50 free searches per month</strong> and don't require a credit card!</p>
+            </div>
+        </div>
+        {% elif user_provider_count < 4 %}
+        <div class="alert info">
+            <div class="icon">💡</div>
+            <div class="alert-content">
+                <h3>{{user_provider_count}} Provider(s) Connected</h3>
+                <p>Great! You can add more providers to increase your monthly capacity and have automatic fallback.</p>
+            </div>
+        </div>
+        {% else %}
+        <div class="alert success">
+            <div class="icon">✅</div>
+            <div class="alert-content">
+                <h3>All Set! All Providers Configured</h3>
+                <p>You have access to all 4 email providers. That's <strong>200 free searches per month</strong>!</p>
+            </div>
+        </div>
+        {% endif %}
+        
+        <!-- API Keys Form -->
+        <div class="section">
+            <h2>📧 Your Email Provider API Keys</h2>
+            <p>Paste your API keys below. They're encrypted and stored securely - only you can use them.</p>
+            
+            <form method="POST" action="{{ url_for('save_api_keys') }}">
+                <!-- Hunter.io -->
+                <div class="provider-card {% if user.has_provider('hunter') %}configured{% endif %}">
+                    <h3>
+                        🔍 Hunter.io
+                        {% if user.has_provider('hunter') %}
+                        <span class="badge configured">✓ Configured</span>
+                        {% else %}
+                        <span class="badge not-configured">Not Configured</span>
+                        {% endif %}
+                    </h3>
+                    <p><strong>50 free/month</strong> • 100M+ contacts • Great for US/Europe companies</p>
+                    <div class="form-group">
+                        <input type="password" name="hunter_api_key" placeholder="Paste your Hunter.io API key here" value="{% if user.has_provider('hunter') %}••••••••••••••••{% endif %}">
+                        <small>Get your free API key: <a href="https://hunter.io/users/sign_up" target="_blank">hunter.io/users/sign_up →</a></small>
+                    </div>
+                </div>
+                
+                <!-- Apollo.io -->
+                <div class="provider-card {% if user.has_provider('apollo') %}configured{% endif %}">
+                    <h3>
+                        🚀 Apollo.io
+                        {% if user.has_provider('apollo') %}
+                        <span class="badge configured">✓ Configured</span>
+                        {% else %}
+                        <span class="badge not-configured">Not Configured</span>
+                        {% endif %}
+                    </h3>
+                    <p><strong>50 free/month</strong> • 275M+ contacts (largest) • No credit card needed</p>
+                    <div class="form-group">
+                        <input type="password" name="apollo_api_key" placeholder="Paste your Apollo.io API key here" value="{% if user.has_provider('apollo') %}••••••••••••••••{% endif %}">
+                        <small>Get your free API key: <a href="https://app.apollo.io/#/sign-up" target="_blank">apollo.io/sign-up →</a></small>
+                    </div>
+                </div>
+                
+                <!-- Snov.io -->
+                <div class="provider-card {% if user.has_provider('snov') %}configured{% endif %}">
+                    <h3>
+                        📧 Snov.io
+                        {% if user.has_provider('snov') %}
+                        <span class="badge configured">✓ Configured</span>
+                        {% else %}
+                        <span class="badge not-configured">Not Configured</span>
+                        {% endif %}
+                    </h3>
+                    <p><strong>50 free/month</strong> • 150M+ contacts • Good international coverage</p>
+                    <div class="form-group">
+                        <input type="password" name="snov_api_key" placeholder="Snov.io API Key (Client ID)" value="{% if user.has_provider('snov') %}••••••••••••••••{% endif %}">
+                        <input type="password" name="snov_client_secret" placeholder="Snov.io Client Secret" style="margin-top: 10px;" value="{% if user.has_provider('snov') %}••••••••••••••••{% endif %}">
+                        <small>Get your free API credentials: <a href="https://snov.io/signup" target="_blank">snov.io/signup →</a></small>
+                    </div>
+                </div>
+                
+                <!-- FindThatLead -->
+                <div class="provider-card {% if user.has_provider('findthatlead') %}configured{% endif %}">
+                    <h3>
+                        🎯 FindThatLead
+                        {% if user.has_provider('findthatlead') %}
+                        <span class="badge configured">✓ Configured</span>
+                        {% else %}
+                        <span class="badge not-configured">Not Configured</span>
+                        {% endif %}
+                    </h3>
+                    <p><strong>50 free/month</strong> • 50M+ contacts • AI-powered verification</p>
+                    <div class="form-group">
+                        <input type="password" name="findthatlead_api_key" placeholder="Paste your FindThatLead API key here" value="{% if user.has_provider('findthatlead') %}••••••••••••••••{% endif %}">
+                        <small>Get your free API key: <a href="https://findthatlead.com/en/signup" target="_blank">findthatlead.com/signup →</a></small>
+                    </div>
+                </div>
+                
+                <button type="submit" class="btn">💾 Save API Keys</button>
+            </form>
+        </div>
+        
+        <!-- OpenAI (Optional) -->
+        <div class="section">
+            <h2>🤖 OpenAI API Key (Optional)</h2>
+            <p>Add your OpenAI API key to generate personalized AI emails. If not provided, we'll use template-based emails.</p>
+            
+            <form method="POST" action="{{ url_for('save_api_keys') }}">
+                <div class="form-group">
+                    <label>
+                        OpenAI API Key
+                        {% if user.has_provider('openai') %}
+                        <span class="badge configured">✓ Configured</span>
+                        {% else %}
+                        <span class="badge not-configured">Optional</span>
+                        {% endif %}
+                    </label>
+                    <input type="password" name="openai_api_key" placeholder="sk-..." value="{% if user.has_provider('openai') %}••••••••••••••••{% endif %}">
+                    <small>Get your API key: <a href="https://platform.openai.com/api-keys" target="_blank">platform.openai.com/api-keys →</a></small>
+                </div>
+                <button type="submit" class="btn">💾 Save OpenAI Key</button>
+            </form>
+        </div>
+
+        <!-- Gmail Integration -->
+        <div class="section">
+            <h2>📧 Gmail Integration (Optional)</h2>
+            <p>Connect your Gmail account to automatically create draft emails for your leads.</p>
+            
+            {% if user.gmail_token_encrypted %}
+                <div class="alert success">
+                    <div class="icon">✅</div>
+                    <div class="alert-content">
+                        <h3>Gmail Connected!</h3>
+                        <p>Your Gmail account is connected and ready to create drafts.</p>
+                    </div>
+                </div>
+                <div style="display: flex; gap: 15px; margin-top: 15px; flex-wrap: wrap;">
+                    <a href="{{ url_for('gmail_setup') }}" class="btn" style="flex: 1; min-width: 200px; text-decoration: none;">
+                        ⚙️ Manage Gmail Connection
+                    </a>
+                    <form method="POST" action="{{ url_for('disconnect_gmail') }}" style="flex: 1; min-width: 200px;">
+                        <button type="submit" class="btn btn-secondary" style="width: 100%;">🔌 Disconnect</button>
+                    </form>
+                </div>
+            {% else %}
+                <div class="provider-card" style="text-align: center; padding: 40px;">
+                    <h3 style="margin-bottom: 20px; font-size: 24px;">🚀 Automate Your Email Workflow</h3>
+                    <p style="font-size: 16px; margin-bottom: 30px;">Connect Gmail to automatically create email drafts for every lead. Save hours of manual work!</p>
+                    <a href="{{ url_for('gmail_setup') }}" class="btn" style="display: inline-block; text-decoration: none; font-size: 18px; padding: 20px 40px;">
+                        🔗 Set Up Gmail Integration
+                    </a>
+                    <p style="margin-top: 20px; color: #666; font-size: 14px;">✓ Secure OAuth 2.0 • ✓ Create drafts only • ✓ Review before sending</p>
+                </div>
+            {% endif %}
+        </div>
+        
+        <!-- Help Section -->
+        <div class="help-box">
+            <h4>💡 How to Get Your API Keys (Step-by-Step)</h4>
+            <ul>
+                <li><strong>Step 1:</strong> Click any "Get your free API key" link above</li>
+                <li><strong>Step 2:</strong> Sign up with your email (usually free, no credit card)</li>
+                <li><strong>Step 3:</strong> In their dashboard, look for "API", "Integrations", or "Settings"</li>
+                <li><strong>Step 4:</strong> Copy your API key</li>
+                <li><strong>Step 5:</strong> Paste it in the field above and click "Save"</li>
+                <li><strong>Step 6:</strong> Start generating leads! 🎉</li>
+            </ul>
+        </div>
+    </div>
+</body>
+</html>

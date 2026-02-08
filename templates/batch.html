@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Batch Processing - LeadFinder AI</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; padding: 40px 20px; }
+        .header { text-align: center; color: white; margin-bottom: 40px; }
+        .header h1 { font-size: 42px; font-weight: 700; margin-bottom: 10px; text-shadow: 0 2px 10px rgba(0,0,0,0.2); }
+        .header p { font-size: 18px; opacity: 0.95; }
+        .container { background: white; padding: 50px 45px; border-radius: 20px; box-shadow: 0 25px 80px rgba(0,0,0,0.3); max-width: 700px; margin: 0 auto; }
+        .nav { margin-bottom: 30px; }
+        .nav a { color: #667eea; text-decoration: none; font-weight: 600; }
+        .nav a:hover { text-decoration: underline; }
+        .form-group { margin-bottom: 25px; }
+        label { display: block; margin-bottom: 10px; color: #333; font-weight: 600; font-size: 14px; }
+        textarea { width: 100%; padding: 16px; border: 2px solid #e0e0e0; border-radius: 10px; font-size: 15px; font-family: 'Inter', monospace; resize: vertical; min-height: 250px; }
+        textarea:focus { outline: none; border-color: #667eea; box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1); }
+        button { width: 100%; padding: 16px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 10px; font-size: 16px; font-weight: 600; cursor: pointer; transition: all 0.3s; box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4); }
+        button:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6); }
+        .example { background: #f8f9fa; padding: 20px; border-radius: 10px; margin-top: 20px; }
+        .example h3 { color: #667eea; margin-bottom: 10px; font-size: 16px; }
+        .example pre { color: #666; font-size: 13px; line-height: 1.8; }
+        .flash { padding: 16px 20px; margin-bottom: 25px; border-radius: 10px; font-weight: 500; }
+        .flash.success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .flash.error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🚀 Batch Processing</h1>
+        <p>Process multiple companies at once</p>
+        <div style="margin-top: 15px; display: flex; justify-content: center; gap: 15px; flex-wrap: wrap;">
+            <a href="{{ url_for('index') }}" style="color: white; text-decoration: none; background: rgba(255,255,255,0.2); padding: 10px 20px; border-radius: 8px; font-weight: 600;">🎯 Single Search</a>
+            <a href="{{ url_for('dashboard') }}" style="color: white; text-decoration: none; background: rgba(255,255,255,0.2); padding: 10px 20px; border-radius: 8px; font-weight: 600;">📊 Dashboard</a>
+            <a href="{{ url_for('settings') }}" style="color: white; text-decoration: none; background: rgba(255,255,255,0.2); padding: 10px 20px; border-radius: 8px; font-weight: 600;">⚙️ Settings</a>
+            <a href="{{ url_for('auth.logout') }}" style="color: white; text-decoration: none; background: rgba(255,255,255,0.2); padding: 10px 20px; border-radius: 8px; font-weight: 600;">Logout</a>
+        </div>
+    </div>
+    
+    <div class="container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="flash {{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        
+        <form action="{{ url_for('batch') }}" method="POST">
+            <div class="form-group">
+                <label for="companies_text">🏢 Company Domains (one per line)</label>
+                <textarea id="companies_text" name="companies_text" placeholder="stripe.com
+airbnb.com
+notion.so
+figma.com
+linear.app" required></textarea>
+            </div>
+            
+            <button type="submit">🚀 Batch Process All Companies</button>
+        </form>
+        
+        <div class="example">
+            <h3>💡 Pro Tips:</h3>
+            <pre>✅ Use domains likely to have many leads (Airbnb, Notion)
+✅ Mix different company sizes for variety
+✅ Limit to 10-15 companies per batch (Hunter rate limits)
+✅ Download CSV after to import into CRM/Gmail</pre>
+        </div>
+    </div>
+</body>
+</html>

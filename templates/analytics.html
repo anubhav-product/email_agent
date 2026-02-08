@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analytics - LeadFinder AI</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background: #f5f7fa; color: #2d3748; }
+        
+        .nav { background: white; padding: 20px 40px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: center; }
+        .logo { font-size: 22px; font-weight: 700; color: #667eea; }
+        .nav-links { display: flex; gap: 25px; align-items: center; }
+        .nav-links a { color: #4a5568; text-decoration: none; font-weight: 500; transition: color 0.3s; }
+        .nav-links a:hover { color: #667eea; }
+        .btn-logout { background: #f7fafc; padding: 8px 18px; border-radius: 6px; }
+        
+        .container { max-width: 1400px; margin: 40px auto; padding: 0 20px; }
+        .header { margin-bottom: 30px; }
+        .header h1 { font-size: 32px; margin-bottom: 8px; }
+        .header p { color: #718096; font-size: 16px; }
+        
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-bottom: 30px; }
+        .stat-card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+        .stat-label { font-size: 14px; color: #718096; font-weight: 500; margin-bottom: 8px; }
+        .stat-value { font-size: 36px; font-weight: 800; color: #2d3748; margin-bottom: 5px; }
+        .stat-change { font-size: 13px; color: #48bb78; font-weight: 600; }
+        .stat-icon { font-size: 24px; margin-bottom: 10px; }
+        
+        .chart-container { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); margin-bottom: 25px; }
+        .chart-header { margin-bottom: 20px; }
+        .chart-header h2 { font-size: 20px; color: #2d3748; }
+        .chart-header p { color: #718096; font-size: 14px; margin-top: 5px; }
+        
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 25px; }
+        @media (max-width: 900px) { .grid-2 { grid-template-columns: 1fr; } }
+        
+        .table { width: 100%; border-collapse: collapse; }
+        .table th { text-align: left; padding: 12px; border-bottom: 2px solid #e2e8f0; color: #4a5568; font-weight: 600; font-size: 13px; text-transform: uppercase; }
+        .table td { padding: 15px 12px; border-bottom: 1px solid #e2e8f0; }
+        .table tr:hover { background: #f7fafc; }
+        
+        .badge { display: inline-block; padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: 600; }
+        .badge-success { background: #c6f6d5; color: #22543d; }
+        .badge-error { background: #fed7d7; color: #742a2a; }
+        .badge-provider { background: #667eea; color: white; }
+        
+        .empty-state { text-align: center; padding: 60px 20px; color: #718096; }
+        .empty-state svg { width: 100px; height: 100px; margin-bottom: 20px; opacity: 0.2; }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <div class="nav">
+        <div class="logo">📊 LeadFinder AI</div>
+        <div class="nav-links">
+            <a href="{{ url_for('index') }}">Dashboard</a>
+            <a href="{{ url_for('batch') }}">Batch</a>
+            <a href="{{ url_for('templates') }}">Templates</a>
+            <a href="{{ url_for('analytics') }}" style="color: #667eea;">Analytics</a>
+            <a href="{{ url_for('settings') }}">Settings</a>
+            <a href="{{ url_for('logout') }}" class="btn-logout">Logout</a>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>📊 Analytics Dashboard</h1>
+            <p>Track your lead generation performance and API usage</p>
+            <div style="margin-top: 15px; display: flex; gap: 10px;">
+                <a href="{{ url_for('export_searches') }}" class="btn btn-secondary" style="display: inline-block; text-decoration: none; padding: 10px 20px; border-radius: 8px; background: #e2e8f0; color: #2d3748; font-weight: 600;">📥 Export Searches CSV</a>
+                <a href="{{ url_for('export_analytics') }}" class="btn btn-secondary" style="display: inline-block; text-decoration: none; padding: 10px 20px; border-radius: 8px; background: #e2e8f0; color: #2d3748; font-weight: 600;">📥 Export Analytics CSV</a>
+            </div>
+        </div>
+
+        <!-- Stats Overview -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon">🎯</div>
+                <div class="stat-label">Total Searches</div>
+                <div class="stat-value">{{ total_searches }}</div>
+                <div class="stat-change">↑ {{ week_searches }} this week</div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-icon">👥</div>
+                <div class="stat-label">Total Leads Generated</div>
+                <div class="stat-value">{{ total_leads }}</div>
+                <div class="stat-change">↑ {{ week_leads }} this week</div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-icon">📈</div>
+                <div class="stat-label">Average Leads/Search</div>
+                <div class="stat-value">{{ "%.1f"|format(avg_leads) }}</div>
+                <div class="stat-change">{{ "%.0f"|format(success_rate) }}% success rate</div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-icon">🔌</div>
+                <div class="stat-label">Providers Connected</div>
+                <div class="stat-value">{{ total_providers }}</div>
+                <div class="stat-change">Hunter, Apollo, Snov, FTL</div>
+            </div>
+        </div>
+
+        <!-- Charts -->
+        <div class="grid-2">
+            <!-- Activity Chart -->
+            <div class="chart-container">
+                <div class="chart-header">
+                    <h2>📅 Activity (Last 30 Days)</h2>
+                    <p>Searches and leads generated over time</p>
+                </div>
+                <canvas id="activityChart" height="250"></canvas>
+            </div>
+            
+            <!-- Provider Usage Chart -->
+            <div class="chart-container">
+                <div class="chart-header">
+                    <h2>🔌 API Usage by Provider</h2>
+                    <p>API calls made to each provider</p>
+                </div>
+                {% if api_calls_by_provider %}
+                    <canvas id="providerChart" height="250"></canvas>
+                {% else %}
+                    <div class="empty-state">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                        </svg>
+                        <p>No API usage data yet</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Recent Searches Table -->
+        <div class="chart-container">
+            <div class="chart-header">
+                <h2>🔍 Recent Searches</h2>
+                <p>Your latest lead generation campaigns</p>
+            </div>
+            
+            {% if recent_searches %}
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Company</th>
+                            <th>Domain</th>
+                            <th>Type</th>
+                            <th>Leads</th>
+                            <th>Status</th>
+                            <th>Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for search in recent_searches %}
+                            <tr>
+                                <td><strong>{{ search.company_name or search.domain }}</strong></td>
+                                <td>{{ search.domain }}</td>
+                                <td><span class="badge badge-provider">{{ search.domain_type or 'default' }}</span></td>
+                                <td><strong>{{ search.lead_count }}</strong> leads</td>
+                                <td>
+                                    {% if search.success %}
+                                        <span class="badge badge-success">✓ Success</span>
+                                    {% else %}
+                                        <span class="badge badge-error">✗ Failed</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ search.created_at.strftime('%b %d, %Y %H:%M') }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% else %}
+                <div class="empty-state">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                    <p>No searches yet. Start generating leads!</p>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Provider Stats Table -->
+        {% if api_calls_by_provider %}
+            <div class="chart-container">
+                <div class="chart-header">
+                    <h2>📊 Provider Performance</h2>
+                    <p>Detailed breakdown of API usage by provider</p>
+                </div>
+                
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Provider</th>
+                            <th>Total API Calls</th>
+                            <th>Credits Used</th>
+                            <th>Avg. Cost/Call</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for provider in api_calls_by_provider %}
+                            <tr>
+                                <td><span class="badge badge-provider">{{ provider.provider.upper() }}</span></td>
+                                <td><strong>{{ provider.calls }}</strong> calls</td>
+                                <td>{{ provider.credits or 0 }} credits</td>
+                                <td>~{{ "%.2f"|format((provider.credits or 0) / provider.calls if provider.calls > 0 else 0) }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% endif %}
+    </div>
+
+    <script>
+        // Activity Chart
+        const activityCtx = document.getElementById('activityChart');
+        if (activityCtx) {
+            new Chart(activityCtx, {
+                type: 'line',
+                data: {
+                    labels: {{ chart_labels|tojson }},
+                    datasets: [{
+                        label: 'Searches',
+                        data: {{ chart_searches|tojson }},
+                        borderColor: '#667eea',
+                        backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }, {
+                        label: 'Leads Generated',
+                        data: {{ chart_leads|tojson }},
+                        borderColor: '#48bb78',
+                        backgroundColor: 'rgba(72, 187, 120, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom' }
+                    },
+                    scales: {
+                        y: { beginAtZero: true }
+                    }
+                }
+            });
+        }
+
+        // Provider Chart
+        const providerCtx = document.getElementById('providerChart');
+        if (providerCtx) {
+            {% if api_calls_by_provider %}
+                new Chart(providerCtx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: [{% for p in api_calls_by_provider %}'{{ p.provider.upper() }}'{% if not loop.last %}, {% endif %}{% endfor %}],
+                        datasets: [{
+                            data: [{% for p in api_calls_by_provider %}{{ p.calls }}{% if not loop.last %}, {% endif %}{% endfor %}],
+                            backgroundColor: [
+                                '#667eea',
+                                '#48bb78',
+                                '#ed8936',
+                                '#9f7aea',
+                                '#38b2ac'
+                            ]
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { position: 'bottom' }
+                        }
+                    }
+                });
+            {% endif %}
+        }
+    </script>
+</body>
+</html>

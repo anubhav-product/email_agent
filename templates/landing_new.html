@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LeadFinder AI - Cold Email Automation Platform</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; color: #1a1a1a; }
+        
+        /* Navigation */
+        .nav { background: white; padding: 20px 40px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); position: sticky; top: 0; z-index: 100; }
+        .nav-content { max-width: 1400px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; }
+        .logo { font-size: 24px; font-weight: 800; color: #667eea; display: flex; align-items: center; gap: 10px; }
+        .nav-links { display: flex; gap: 30px; align-items: center; }
+        .nav-links a { color: #666; text-decoration: none; font-weight: 500; transition: color 0.3s; }
+        .nav-links a:hover { color: #667eea; }
+        .nav-btn { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 12px 28px; border-radius: 8px; font-weight: 600; }
+        .nav-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4); }
+        
+        /* Hero Section */
+        .hero { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 120px 40px; text-align: center; color: white; position: relative; overflow: hidden; }
+        .hero::before { content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: url('data:image/svg+xml,<svg width="100" height="100" xmlns="http://www.w3.org/2000/svg"><circle cx="50" cy="50" r="2" fill="rgba(255,255,255,0.1)"/></svg>'); opacity: 0.3; }
+        .hero-content { max-width: 900px; margin: 0 auto; position: relative; z-index: 1; }
+        .hero h1 { font-size: 64px; font-weight: 900; margin-bottom: 24px; line-height: 1.1; }
+        .hero .subtitle { font-size: 24px; margin-bottom: 16px; opacity: 0.95; font-weight: 500; }
+        .hero .description { font-size: 18px; opacity: 0.9; margin-bottom: 40px; line-height: 1.6; }
+        .hero-cta { display: flex; gap: 20px; justify-content: center; margin-bottom: 40px; }
+        .btn { padding: 18px 40px; border-radius: 12px; font-weight: 700; font-size: 17px; text-decoration: none; transition: all 0.3s; display: inline-block; }
+        .btn-white { background: white; color: #667eea; box-shadow: 0 4px 20px rgba(0,0,0,0.2); }
+        .btn-white:hover { transform: translateY(-3px); box-shadow: 0 6px 30px rgba(0,0,0,0.3); }
+        .btn-outline { background: transparent; color: white; border: 3px solid white; }
+        .btn-outline:hover { background: rgba(255,255,255,0.1); }
+        .hero-stats { display: flex; justify-content: center; gap: 60px; margin-top: 60px; }
+        .hero-stat { text-align: center; }
+        .hero-stat .number { font-size: 42px; font-weight: 800; }
+        .hero-stat .label { font-size: 14px; opacity: 0.9; margin-top: 8px; }
+        
+        /* Problem Section */
+        .problem { background: #f5f7fa; padding: 100px 40px; }
+        .section-title { text-align: center; font-size: 48px; font-weight: 800; margin-bottom: 60px; color: #1a1a1a; }
+        .problem-grid { max-width: 1200px; margin: 0 auto; display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 40px; }
+        .problem-card { background: white; padding: 40px; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.06); }
+        .problem-card .icon { font-size: 48px; margin-bottom: 20px; }
+        .problem-card h3 { font-size: 22px; margin-bottom: 12px; color: #e74c3c; }
+        .problem-card p { color: #666; line-height: 1.7; font-size: 16px; }
+        
+        /* Solution Section */
+        .solution { padding: 100px 40px; background: white; }
+        .solution-content { max-width: 1200px; margin: 0 auto; }
+        .solution-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 50px; margin-top: 60px; }
+        .solution-feature { display: flex; gap: 20px; }
+        .solution-feature .icon { font-size: 40px; flex-shrink: 0; }
+        .solution-feature .content h3 { font-size: 22px; margin-bottom: 12px; color: #667eea; font-weight: 700; }
+        .solution-feature .content p { color: #666; line-height: 1.7; font-size: 16px; }
+        .solution-feature .content ul { margin-top: 12px; color: #666; line-height: 2; }
+        .solution-feature .content ul li { position: relative; padding-left: 24px; }
+        .solution-feature .content ul li::before { content: '✓'; position: absolute; left: 0; color: #4caf50; font-weight: 800; }
+        
+        /* How It Works */
+        .how-it-works { background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); padding: 100px 40px; }
+        .steps { max-width: 1000px; margin: 60px auto 0; }
+        .step { display: flex; gap: 30px; margin-bottom: 50px; align-items: start; }
+        .step-number { width: 80px; height: 80px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 36px; font-weight: 800; flex-shrink: 0; box-shadow: 0 4px 20px rgba(102, 126, 234, 0.4); }
+        .step-content { flex: 1; }
+        .step-content h3 { font-size: 26px; margin-bottom: 12px; color: #1a1a1a; font-weight: 700; }
+        .step-content p { color: #666; line-height: 1.7; font-size: 17px; }
+        
+        /* Providers Section */
+        .providers { padding: 100px 40px; background: white; }
+        .provider-grid { max-width: 1200px; margin: 60px auto 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 30px; }
+        .provider-card { background: #f8f9fa; padding: 35px; border-radius: 16px; text-align: center; transition: all 0.3s; border: 3px solid transparent; }
+        .provider-card:hover { border-color: #667eea; transform: translateY(-5px); box-shadow: 0 10px 30px rgba(102, 126, 234, 0.2); }
+        .provider-card .icon { font-size: 48px; margin-bottom: 16px; }
+        .provider-card h3 { font-size: 20px; margin-bottom: 8px; color: #1a1a1a; font-weight: 700; }
+        .provider-card .free-badge { background: #4caf50; color: white; padding: 6px 16px; border-radius: 20px; font-size: 13px; font-weight: 700; display: inline-block; margin-bottom: 12px; }
+        .provider-card p { color: #666; font-size: 14px; line-height: 1.6; }
+        
+        /* CTA Section */
+        .cta { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 100px 40px; text-align: center; color: white; }
+        .cta h2 { font-size: 52px; font-weight: 800; margin-bottom: 24px; }
+        .cta p { font-size: 22px; margin-bottom: 40px; opacity: 0.95; }
+        
+        /* Footer */
+        .footer { background: #1a1a1a; color: white; padding: 60px 40px; text-align: center; }
+        .footer-content { max-width: 1200px; margin: 0 auto; }
+        .footer p { opacity: 0.7; margin-bottom: 20px; }
+        .footer a { color: #667eea; text-decoration: none; margin: 0 15px; }
+        .footer a:hover { text-decoration: underline; }
+        
+        @media (max-width: 768px) {
+            .hero h1 { font-size: 42px; }
+            .hero .subtitle { font-size: 20px; }
+            .section-title { font-size: 36px; }
+            .nav-links { display: none; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="nav">
+        <div class="nav-content">
+            <div class="logo">
+                <span>🚀</span>
+                <span>LeadFinder AI</span>
+            </div>
+            <div class="nav-links">
+                <a href="#how-it-works">How It Works</a>
+                <a href="#features">Features</a>
+                <a href="#providers">Providers</a>
+                <a href="{{ url_for('auth.login') }}">Sign In</a>
+                <a href="{{ url_for('auth.signup') }}" class="nav-btn">Start Free Trial</a>
+            </div>
+        </div>
+    </nav>
+    
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-content">
+            <h1>Cold Email Automation That Actually Gets Responses</h1>
+            <p class="subtitle">Find decision-makers, write personalized emails, and scale your outreach with AI</p>
+            <p class="description">The all-in-one platform for sales teams, recruiters, and business owners. Find verified emails from any company, generate AI-powered personalized messages, and automate your entire outreach workflow.</p>
+            <div class="hero-cta">
+                <a href="{{ url_for('auth.signup') }}" class="btn btn-white">Start Free →</a>
+                <a href="#how-it-works" class="btn btn-outline">See How It Works</a>
+            </div>
+            <div class="hero-stats">
+                <div class="hero-stat">
+                    <div class="number">4</div>
+                    <div class="label">Email Providers</div>
+                </div>
+                <div class="hero-stat">
+                    <div class="number">200+</div>
+                    <div class="label">Free Leads/Month</div>
+                </div>
+                <div class="hero-stat">
+                    <div class="number">95%+</div>
+                    <div class="label">Email Accuracy</div>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Problem Section -->
+    <section class="problem">
+        <h2 class="section-title">The Cold Email Problem</h2>
+        <div class="problem-grid">
+            <div class="problem-card">
+                <div class="icon">😰</div>
+                <h3>Finding Emails Takes Forever</h3>
+                <p>Manually hunting for decision-makers on LinkedIn, company websites, and Google wastes hours every single day.</p>
+            </div>
+            <div class="problem-card">
+                <div class="icon">😴</div>
+                <h3>Generic Messages Get Ignored</h3>
+                <p>Copy-paste templates are obvious and get deleted immediately. Response rates are dismal.</p>
+            </div>
+            <div class="problem-card">
+                <div class="icon">💸</div>
+                <h3>Tools Are Crazy Expensive</h3>
+                <p>Professional email finding tools cost $50-200/month per user. Small teams can't afford it.</p>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Solution Section -->
+    <section class="solution">
+        <div class="solution-content">
+            <h2 class="section-title">The LeadFinder Solution</h2>
+            <div class="solution-grid">
+                <div class="solution-feature">
+                    <div class="icon">🔍</div>
+                    <div class="content">
+                        <h3>Multi-Provider Email Finding</h3>
+                        <p>Integrate 4 top email finders (Hunter, Apollo, Snov, FindThatLead) with automatic fallback:</p>
+                        <ul>
+                            <li>200 free leads per month</li>
+                            <li>Auto-switch if one fails</li>
+                            <li>7-day result caching</li>
+                            <li>95%+ accuracy rate</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="solution-feature">
+                    <div class="icon">🤖</div>
+                    <div class="content">
+                        <h3>AI-Powered Personalization</h3>
+                        <p>GPT-4 writes unique emails for each recipient based on their role and company:</p>
+                        <ul>
+                            <li>Job title customization</li>
+                            <li>Company-specific research</li>
+                            <li>No generic templates</li>
+                            <li>Natural, human tone</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="solution-feature">
+                    <div class="icon">⚡</div>
+                    <div class="content">
+                        <h3>Batch Processing</h3>
+                        <p>Process multiple companies at once to 10x your productivity:</p>
+                        <ul>
+                            <li>Bulk domain input</li>
+                            <li>Parallel processing</li>
+                            <li>One-click CSV export</li>
+                            <li>Perfect for agencies</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="solution-feature">
+                    <div class="icon">📧</div>
+                    <div class="content">
+                        <h3>Gmail Integration</h3>
+                        <p>Automatically create drafts in your Gmail account:</p>
+                        <ul>
+                            <li>Review before sending</li>
+                            <li>Make quick edits</li>
+                            <li>Track responses</li>
+                            <li>Maintain sender reputation</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- How It Works -->
+    <section id="how-it-works" class="how-it-works">
+        <h2 class="section-title">How It Works in 4 Simple Steps</h2>
+        <div class="steps">
+            <div class="step">
+                <div class="step-number">1</div>
+                <div class="step-content">
+                    <h3>Enter Target Company</h3>
+                    <p>Type in a company domain (e.g., "stripe.com") or batch process multiple companies at once. Select the career path that matches your target audience (PM, Engineering, Consulting, etc.).</p>
+                </div>
+            </div>
+            
+            <div class="step">
+                <div class="step-number">2</div>
+                <div class="step-content">
+                    <h3>AI Finds Decision-Makers</h3>
+                    <p>Our system searches 4 email providers simultaneously, using cached results when available. We automatically find the right people - founders, hiring managers, VPs - with verified email addresses.</p>
+                </div>
+            </div>
+            
+            <div class="step">
+                <div class="step-number">3</div>
+                <div class="step-content">
+                    <h3>GPT-4 Writes Personalized Emails</h3>
+                    <p>AI generates unique, personalized emails for each recipient based on their role, seniority, and company. No templates - every message is crafted to get responses.</p>
+                </div>
+            </div>
+            
+            <div class="step">
+                <div class="step-number">4</div>
+                <div class="step-content">
+                    <h3>Send or Export</h3>
+                    <p>Review emails in your Gmail drafts, download as CSV for mail merge tools, or export to Markdown. Track all your campaigns in one searchable dashboard.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Providers Section -->
+    <section id="providers" class="providers">
+        <h2 class="section-title">Built on the Best Email Providers</h2>
+        <p style="text-align: center; color: #666; font-size: 18px; margin-bottom: 20px; max-width: 800px; margin-left: auto; margin-right: auto;">We integrate with 4 industry-leading email finders. Add your free API keys and get 200 searches per month at zero cost.</p>
+        <div class="provider-grid">
+            <div class="provider-card">
+                <div class="icon">🔍</div>
+                <h3>Hunter.io</h3>
+                <div class="free-badge">50 FREE/MONTH</div>
+                <p>100M+ contact database. Industry standard for email finding with 95% accuracy.</p>
+            </div>
+            
+            <div class="provider-card">
+                <div class="icon">🚀</div>
+                <h3>Apollo.io</h3>
+                <div class="free-badge">50 FREE/MONTH</div>
+                <p>275M+ contacts - the largest B2B database. No credit card required for free tier.</p>
+            </div>
+            
+            <div class="provider-card">
+                <div class="icon">📧</div>
+                <h3>Snov.io</h3>
+                <div class="free-badge">50 FREE/MONTH</div>
+                <p>150M+ verified emails. Fast API with excellent European company coverage.</p>
+            </div>
+            
+            <div class="provider-card">
+                <div class="icon">🎯</div>
+                <h3>FindThatLead</h3>
+                <div class="free-badge">50 FREE/MONTH</div>
+                <p>50M+ contacts with AI-powered enrichment and verification.</p>
+            </div>
+        </div>
+    </section>
+    
+    <!-- CTA Section -->
+    <section class="cta">
+        <h2>Start Finding Leads in 60 Seconds</h2>
+        <p>No credit card required. 200 free leads per month forever.</p>
+        <a href="{{ url_for('auth.signup') }}" class="btn btn-white">Create Free Account →</a>
+    </section>
+    
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-content">
+            <p>&copy; 2026 LeadFinder AI. All rights reserved.</p>
+            <div>
+                <a href="{{ url_for('auth.login') }}">Sign In</a>
+                <a href="{{ url_for('auth.signup') }}">Sign Up</a>
+                <a href="#how-it-works">How It Works</a>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>

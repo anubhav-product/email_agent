@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settings - LeadFinder AI</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background: #f5f7fa; min-height: 100vh; }
+        
+        /* Header */
+        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .header-content { max-width: 1200px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; }
+        .logo { font-size: 24px; font-weight: 700; }
+        .nav-links { display: flex; gap: 15px; }
+        .nav-links a { color: white; text-decoration: none; background: rgba(255,255,255,0.2); padding: 10px 20px; border-radius: 8px; font-weight: 600; }
+        .nav-links a:hover { background: rgba(255,255,255,0.3); }
+        
+        /* Container */
+        .container { max-width: 1000px; margin: 40px auto; padding: 0 20px; }
+        
+        /* Page Title */
+        .page-title { font-size: 32px; margin-bottom: 30px; color: #333; }
+        
+        /* Alert Box */
+        .alert { padding: 20px; border-radius: 12px; margin-bottom: 30px; display: flex; align-items: start; gap: 15px; }
+        .alert.info { background: #e3f2fd; color: #0d47a1; border: 2px solid #2196f3; }
+        .alert.success { background: #e8f5e9; color: #1b5e20; border: 2px solid #4caf50; }
+        .alert.warning { background: #fff3e0; color: #e65100; border: 2px solid #ff9800; }
+        .alert .icon { font-size: 28px; }
+        .alert-content h3 { margin-bottom: 8px; font-size: 18px; }
+        .alert-content p { line-height: 1.6; }
+        
+        /* Provider Grid */
+        .provider-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-bottom: 40px; }
+        .provider-card { background: white; padding: 25px; border-radius: 16px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); position: relative; }
+        .provider-card.enabled { border: 3px solid #4caf50; }
+        .provider-card.disabled { opacity: 0.6; border: 3px solid #e0e0e0; }
+        .provider-header { display: flex; justify-content: space-between; align-items: start; margin-bottom: 15px; }
+        .provider-name { font-size: 22px; font-weight: 700; color: #333; }
+        .status-badge { padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; text-transform: uppercase; }
+        .status-badge.enabled { background: #4caf50; color: white; }
+        .status-badge.disabled { background: #e0e0e0; color: #666; }
+        .provider-details { margin: 15px 0; color: #666; line-height: 1.8; }
+        .provider-details strong { color: #333; }
+        .provider-link { display: inline-block; margin-top: 15px; color: #667eea; text-decoration: none; font-weight: 600; }
+        .provider-link:hover { text-decoration: underline; }
+        
+        /* Instructions Section */
+        .instructions { background: white; padding: 40px; border-radius: 16px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); margin-bottom: 30px; }
+        .instructions h2 { font-size: 24px; margin-bottom: 20px; color: #333; }
+        .step { margin: 25px 0; padding: 20px; background: #f8f9fa; border-left: 4px solid #667eea; border-radius: 8px; }
+        .step-number { display: inline-block; width: 32px; height:32px; background: #667eea; color: white; border-radius: 50%; text-align: center; line-height: 32px; font-weight: 700; margin-right: 12px; }
+        .step-content { display: inline-block; vertical-align: top; width: calc(100% - 50px); }
+        .step-content h3 { font-size: 18px; margin-bottom: 8px; color: #333; }
+        .step-content p { color: #666; line-height: 1.6; }
+        .step-content code { background: #e0e0e0; padding: 2px 8px; border-radius: 4px; font-family: monospace; font-size: 13px; }
+        
+        /* Note */
+        .note { background: #fff9c4; padding: 20px; border-radius: 12px; border-left: 4px solid #fbc02d; margin-top: 30px; }
+        .note strong { color: #f57f17; }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <div class="header">
+        <div class="header-content">
+            <div class="logo">⚙️ Settings</div>
+            <div class="nav-links">
+                <a href="{{ url_for('index') }}">🎯 Generate Leads</a>
+                <a href="{{ url_for('dashboard') }}">📊 Dashboard</a>
+                <a href="{{ url_for('batch') }}">📋 Batch</a>
+                <a href="{{ url_for('auth.logout') }}">Logout</a>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Container -->
+    <div class="container">
+        <h1 class="page-title">Email Provider Settings</h1>
+        
+        {% if provider_count == 0 %}
+        <div class="alert warning">
+            <div class="icon">⚠️</div>
+            <div class="alert-content">
+                <h3>No Email Providers Configured</h3>
+                <p>You need to add at least one email provider API key to find leads. All providers below offer <strong>50 free credits per month</strong> (no credit card required for most).</p>
+            </div>
+        </div>
+        {% elif provider_count < 4 %}
+        <div class="alert info">
+            <div class="icon">💡</div>
+            <div class="alert-content">
+                <h3>{{provider_count}} Provider(s) Configured</h3>
+                <p>Great start! Add more providers to increase your monthly capacity and have automatic fallback if one provider reaches its limit.</p>
+            </div>
+        </div>
+        {% else %}
+        <div class="alert success">
+            <div class="icon">✅</div>
+            <div class="alert-content">
+                <h3>All Providers Configured!</h3>
+                <p>Excellent! You have access to all 4 email providers with automatic fallback. That's <strong>200 free searches per month</strong>!</p>
+            </div>
+        </div>
+        {% endif %}
+        
+        <!-- Provider Status Grid -->
+        <h2 style="font-size: 24px; margin: 30px 0 20px; color: #333;">Provider Status</h2>
+        <div class="provider-grid">
+            <div class="provider-card {% if 'hunter' in enabled_providers %}enabled{% else %}disabled{% endif %}">
+                <div class="provider-header">
+                    <div class="provider-name">🔍 Hunter.io</div>
+                    <span class="status-badge {% if 'hunter' in enabled_providers %}enabled{% else %}disabled{% endif %}">
+                        {% if 'hunter' in enabled_providers %}Enabled{% else %}Not Configured{% endif %}
+                    </span>
+                </div>
+                <div class="provider-details">
+                    <strong>Free Tier:</strong> 50 searches/month<br>
+                    <strong>Database:</strong> 100M+ contacts<br>
+                    <strong>Requires:</strong> Email only (no CC)
+                </div>
+                <a href="https://hunter.io/users/sign_up" target="_blank" class="provider-link">Get Free API Key →</a>
+            </div>
+            
+            <div class="provider-card {% if 'apollo' in enabled_providers %}enabled{% else %}disabled{% endif %}">
+                <div class="provider-header">
+                    <div class="provider-name">🚀 Apollo.io</div>
+                    <span class="status-badge {% if 'apollo' in enabled_providers %}enabled{% else %}disabled{% endif %}">
+                        {% if 'apollo' in enabled_providers %}Enabled{% else %}Not Configured{% endif %}
+                    </span>
+                </div>
+                <div class="provider-details">
+                    <strong>Free Tier:</strong> 50 searches/month<br>
+                    <strong>Database:</strong> 275M+ contacts (largest)<br>
+                    <strong>Requires:</strong> Email only (no CC)
+                </div>
+                <a href="https://app.apollo.io/#/sign-up" target="_blank" class="provider-link">Get Free API Key →</a>
+            </div>
+            
+            <div class="provider-card {% if 'snov' in enabled_providers %}enabled{% else %}disabled{% endif %}">
+                <div class="provider-header">
+                    <div class="provider-name">📧 Snov.io</div>
+                    <span class="status-badge {% if 'snov' in enabled_providers %}enabled{% else %}disabled{% endif %}">
+                        {% if 'snov' in enabled_providers %}Enabled{% else %}Not Configured{% endif %}
+                    </span>
+                </div>
+                <div class="provider-details">
+                    <strong>Free Tier:</strong> 50 searches/month<br>
+                    <strong>Database:</strong> 150M+ contacts<br>
+                    <strong>Requires:</strong> Email + Client Secret
+                </div>
+                <a href="https://snov.io/signup" target="_blank" class="provider-link">Get Free API Key →</a>
+            </div>
+            
+            <div class="provider-card {% if 'findthatlead' in enabled_providers %}enabled{% else %}disabled{% endif %}">
+                <div class="provider-header">
+                    <div class="provider-name">🎯 FindThatLead</div>
+                    <span class="status-badge {% if 'findthatlead' in enabled_providers %}enabled{% else %}disabled{% endif %}">
+                        {% if 'findthatlead' in enabled_providers %}Enabled{% else %}Not Configured{% endif %}
+                    </span>
+                </div>
+                <div class="provider-details">
+                    <strong>Free Tier:</strong> 50 searches/month<br>
+                    <strong>Database:</strong> 50M+ contacts<br>
+                    <strong>Requires:</strong> Email only (no CC)
+                </div>
+                <a href="https://findthatlead.com/en/signup" target="_blank" class="provider-link">Get Free API Key →</a>
+            </div>
+        </div>
+        
+        <!-- Instructions -->
+        <div class="instructions">
+            <h2>📖 How to Add API Keys</h2>
+            
+            <div class="step">
+                <span class="step-number">1</span>
+                <div class="step-content">
+                    <h3>Sign Up for Free Accounts</h3>
+                    <p>Click the "Get Free API Key →" links above. We recommend starting with <strong>Apollo.io</strong> (largest database, no credit card needed).</p>
+                </div>
+            </div>
+            
+            <div class="step">
+                <span class="step-number">2</span>
+                <div class="step-content">
+                    <h3>Get Your API Key</h3>
+                    <p>After signing up, look for "API Keys" or "Integrations" in their settings/dashboard. Copy your API key.</p>
+                </div>
+            </div>
+            
+            <div class="step">
+                <span class="step-number">3</span>
+                <div class="step-content">
+                    <h3>Add to Environment File</h3>
+                    <p>Contact your administrator to add the API key to the <code>.env</code> file:
+                    <br><br>
+                    <code>APOLLO_API_KEY=your_api_key_here</code>
+                    <br>
+                    <code>HUNTER_API_KEY=your_api_key_here</code>
+                    <br>
+                    <code>SNOV_API_KEY=your_api_key_here</code>
+                    <br>
+                    <code>FINDTHATLEAD_API_KEY=your_api_key_here</code>
+                    </p>
+                </div>
+            </div>
+            
+            <div class="step">
+                <span class="step-number">4</span>
+                <div class="step-content">
+                    <h3>Restart the App</h3>
+                    <p>The administrator needs to restart the application for the new API keys to take effect.</p>
+                </div>
+            </div>
+            
+            <div class="note">
+                <strong>💡 Pro Tip:</strong> Add all 4 providers for maximum reliability! If one hits its rate limit or fails, the system automatically tries the next one. With all 4 providers, you get 200 free searches per month.
+            </div>
+        </div>
+    </div>
+</body>
+</html>

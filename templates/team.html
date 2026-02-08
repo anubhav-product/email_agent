@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Team - LeadFinder AI</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background: #f5f7fa; color: #2d3748; }
+        
+        .nav { background: white; padding: 20px 40px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: center; }
+        .logo { font-size: 22px; font-weight: 700; color: #667eea; }
+        .nav-links { display: flex; gap: 25px; align-items: center; }
+        .nav-links a { color: #4a5568; text-decoration: none; font-weight: 500; transition: color 0.3s; }
+        .nav-links a:hover { color: #667eea; }
+        .btn-logout { background: #f7fafc; padding: 8px 18px; border-radius: 6px; }
+        
+        .container { max-width: 1200px; margin: 40px auto; padding: 0 20px; }
+        .header { margin-bottom: 30px; }
+        .header h1 { font-size: 32px; margin-bottom: 8px; }
+        .header p { color: #718096; font-size: 16px; }
+        
+        .btn { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 12px 24px; border-radius: 8px; border: none; cursor: pointer; font-weight: 600; font-size: 15px; transition: transform 0.2s; }
+        .btn:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3); }
+        .btn-secondary { background: #e2e8f0; color: #2d3748; }
+        .btn-small { padding: 6px 14px; font-size: 13px; }
+        .btn-danger { background: #f56565; }
+        
+        .card { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); margin-bottom: 25px; }
+        
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; margin-bottom: 8px; font-weight: 600; color: #2d3748; font-size: 14px; }
+        .form-group input, .form-group select { width: 100%; padding: 12px; border: 2px solid #e2e8f0; border-radius: 8px; font-family: inherit; font-size: 14px; }
+        .form-group input:focus, .form-group select:focus { outline: none; border-color: #667eea; }
+        
+        .form-inline { display: flex; gap: 10px; align-items: flex-end; }
+        .form-inline .form-group { flex: 1; margin-bottom: 0; }
+        
+        .table { width: 100%; border-collapse: collapse; }
+        .table th { text-align: left; padding: 12px; border-bottom: 2px solid #e2e8f0; color: #4a5568; font-weight: 600; font-size: 13px; }
+        .table td { padding: 15px 12px; border-bottom: 1px solid #e2e8f0; }
+        .table tr:hover { background: #f7fafc; }
+        
+        .badge { display: inline-block; padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: 600; }
+        .badge-owner { background: #ecc94b; color: #744210; }
+        .badge-admin { background: #9f7aea; color: white; }
+        .badge-member { background: #4299e1; color: white; }
+        .badge-viewer { background: #cbd5e0; color: #2d3748; }
+        
+        .flash { padding: 15px 20px; border-radius: 8px; margin-bottom: 20px; font-weight: 500; }
+        .flash.success { background: #c6f6d5; color: #22543d; border-left: 4px solid #38a169; }
+        .flash.error { background: #fed7d7; color: #742a2a; border-left: 4px solid #e53e3e; }
+        .flash.warning { background: #feebc8; color: #744210; border-left: 4px solid #ed8936; }
+        .flash.info { background: #bee3f8; color: #2c5282; border-left: 4px solid #3182ce; }
+        
+        .org-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; padding-bottom: 20px; border-bottom: 2px solid #e2e8f0; }
+        .org-header h2 { font-size: 24px; color: #2d3748; }
+        .org-info { display: flex; gap: 30px; font-size: 14px; color: #718096; }
+        
+        .help-box { background: #edf2f7; padding: 20px; border-radius: 8px; border-left: 4px solid #667eea; margin-top: 20px; }
+        .help-box h4 { margin-bottom: 10px; color: #2d3748; }
+        .help-box ul { margin-left: 20px; line-height: 1.8; color: #4a5568; }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <div class="nav">
+        <div class="logo">👥 LeadFinder AI</div>
+        <div class="nav-links">
+            <a href="{{ url_for('index') }}">Dashboard</a>
+            <a href="{{ url_for('batch') }}">Batch</a>
+            <a href="{{ url_for('templates') }}">Templates</a>
+            <a href="{{ url_for('analytics') }}">Analytics</a>
+            <a href="{{ url_for('team') }}" style="color: #667eea;">Team</a>
+            <a href="{{ url_for('settings') }}">Settings</a>
+            <a href="{{ url_for('logout') }}" class="btn-logout">Logout</a>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="flash {{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <!-- Header -->
+        <div class="header">
+            <h1>👥 Team Management</h1>
+            <p>Manage your organization members and permissions</p>
+        </div>
+
+        <!-- Organization Info -->
+        <div class="card">
+            <div class="org-header">
+                <div>
+                    <h2>{{ organization.name }}</h2>
+                    <div class="org-info">
+                        <span>📅 Created {{ organization.created_at.strftime('%b %d, %Y') }}</span>
+                        <span>👥 {{ team_members|length }} members</span>
+                        <span>📦 {{ organization.plan.upper() }} Plan</span>
+                    </div>
+                </div>
+                {% if user.role in ['owner', 'admin'] %}
+                    <div>
+                        <span class="badge badge-{{ user.role }}">{{ user.role.upper() }}</span>
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Invite Member Form (Owner/Admin only) -->
+            {% if user.role in ['owner', 'admin'] %}
+                <form method="POST" action="{{ url_for('invite_team_member') }}" class="form-inline">
+                    <div class="form-group">
+                        <label>Invite Team Member</label>
+                        <input type="email" name="email" required placeholder="colleague@company.com">
+                    </div>
+                    <div class="form-group" style="flex: 0.5;">
+                        <label>Role</label>
+                        <select name="role">
+                            <option value="member">Member</option>
+                            <option value="admin">Admin</option>
+                            {% if user.role == 'owner' %}
+                                <option value="viewer">Viewer</option>
+                            {% endif %}
+                        </select>
+                    </div>
+                    <button type="submit" class="btn" style="margin-bottom: 0;">+ Invite</button>
+                </form>
+            {% endif %}
+        </div>
+
+        <!-- Team Members -->
+        <div class="card">
+            <h2 style="margin-bottom: 20px;">Team Members</h2>
+            
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Role</th>
+                        <th>Joined</th>
+                        <th>Searches</th>
+                        {% if user.role in ['owner', 'admin'] %}
+                            <th>Actions</th>
+                        {% endif %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for member in team_members %}
+                        <tr>
+                            <td><strong>{{ member.name }}</strong></td>
+                            <td>{{ member.email }}</td>
+                            <td><span class="badge badge-{{ member.role }}">{{ member.role.upper() }}</span></td>
+                            <td>{{ member.created_at.strftime('%b %d, %Y') }}</td>
+                            <td>{{ member.total_searches }} searches</td>
+                            {% if user.role in ['owner', 'admin'] %}
+                                <td>
+                                    {% if member.id != user.id %}
+                                        {% if user.role == 'owner' %}
+                                            <form method="POST" action="{{ url_for('update_team_member_role', user_id=member.id) }}" style="display: inline; margin-right: 10px;">
+                                                <select name="role" onchange="this.form.submit()" class="btn-small" style="border: 1px solid #e2e8f0; padding: 4px 8px; border-radius: 4px;">
+                                                    <option value="member" {% if member.role == 'member' %}selected{% endif %}>Member</option>
+                                                    <option value="admin" {% if member.role == 'admin' %}selected{% endif %}>Admin</option>
+                                                    <option value="viewer" {% if member.role == 'viewer' %}selected{% endif %}>Viewer</option>
+                                                </select>
+                                            </form>
+                                        {% endif %}
+                                        
+                                        <form method="POST" action="{{ url_for('remove_team_member', user_id=member.id) }}" style="display: inline;" onsubmit="return confirm('Remove this team member?');">
+                                            <button type="submit" class="btn btn-small btn-danger">Remove</button>
+                                        </form>
+                                    {% else %}
+                                        <span style="color: #718096; font-size: 13px;">You</span>
+                                    {% endif %}
+                                </td>
+                            {% endif %}
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Help Box -->
+        <div class="help-box">
+            <h4>📋 Role Permissions</h4>
+            <ul>
+                <li><strong>Owner:</strong> Full access - manage members, billing, and all settings</li>
+                <li><strong>Admin:</strong> Invite members, manage API keys, view all data</li>
+                <li><strong>Member:</strong> Generate leads, create templates, view own data</li>
+                <li><strong>Viewer:</strong> Read-only access to organization data</li>
+            </ul>
+        </div>
+
+        {% if organization.allow_template_sharing %}
+            <div class="help-box" style="border-left-color: #48bb78;">
+                <h4>✨ Team Features Enabled</h4>
+                <ul>
+                    <li>📧 Template Sharing: All members can use shared email templates</li>
+                    <li>👥 Lead Sharing: Access to team-wide lead database</li>
+                    <li>🔌 Shared API Keys: Organization-level API keys available to all members</li>
+                </ul>
+            </div>
+        {% endif %}
+    </div>
+</body>
+</html>
