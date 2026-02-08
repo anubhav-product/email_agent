@@ -41,6 +41,35 @@ class GmailService:
             return False
         return os.path.exists(self.credentials_path)
     
+    def get_simple_auth_flow(self) -> Optional[tuple]:
+        """
+        Create a simple OAuth flow that works with Desktop/Installed app type
+        No need to configure redirect URIs in Google Cloud Console!
+        Returns: (flow, authorization_url) or None if not configured
+        """
+        if not self.is_configured():
+            return None
+        
+        try:
+            # Use urn:ietf:wg:oauth:2.0:oob for installed apps (no redirect needed)
+            flow = Flow.from_client_secrets_file(
+                self.credentials_path,
+                scopes=self.SCOPES,
+                redirect_uri='urn:ietf:wg:oauth:2.0:oob'
+            )
+            
+            authorization_url, _ = flow.authorization_url(
+                access_type='offline',
+                include_granted_scopes='true',
+                prompt='consent'
+            )
+            
+            return flow, authorization_url
+        
+        except Exception as e:
+            print(f"Error generating OAuth flow: {e}")
+            return None
+    
     def get_oauth_url(self, redirect_uri: str) -> Optional[tuple]:
         """
         Generate OAuth authorization URL
@@ -66,6 +95,26 @@ class GmailService:
         
         except Exception as e:
             print(f"Error generating OAuth URL: {e}")
+            return None
+    
+    def exchange_code_for_token(self, flow, code: str) -> Optional[str]:
+        """
+        Exchange authorization code for tokens (for simple flow)
+        Returns: credentials JSON string or None on error
+        """
+        if not self.is_configured():
+            return None
+        
+        try:
+            # Exchange code for credentials
+            flow.fetch_token(code=code)
+            credentials = flow.credentials
+            
+            # Return credentials as JSON for storage
+            return credentials.to_json()
+        
+        except Exception as e:
+            print(f"Error exchanging code for token: {e}")
             return None
     
     def handle_oauth_callback(self, state: str, redirect_uri: str, authorization_response: str) -> Optional[str]:

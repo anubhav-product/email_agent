@@ -1,5 +1,5 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, send_file, jsonify, session
-from flask_login import login_required, current_user
+from flask_login import login_required, current_user, login_user
 import os
 from dotenv import load_dotenv
 from datetime import datetime
@@ -105,8 +105,14 @@ def generate():
         # Use multi-provider email finder with caching
         openai_client = None
         if config.use_openai_drafts:
-            openai_key = require_env('OPENAI_API_KEY')
-            openai_client = OpenAIDraftClient(openai_key, OpenAIDraftConfig(model=config.openai_model))
+            # Try to get OpenAI key from environment variable, then user settings
+            openai_key = os.getenv('OPENAI_API_KEY') or current_user.get_api_key('openai')
+            if openai_key:
+                os.environ['OPENAI_API_KEY'] = openai_key
+                openai_client = OpenAIDraftClient(openai_key, OpenAIDraftConfig(model=config.openai_model))
+            else:
+                config.use_openai_drafts = False
+                flash('💡 OpenAI API key not configured. Add it in Settings to enable AI-generated drafts.', 'info')
         
         company = CompanyInput(name=company_name or domain, domain=normalize_domain(domain))
         
@@ -131,7 +137,26 @@ def generate():
             flash(f"No leads matched target roles for {domain_type}", "error")
             return redirect(url_for('landing'))
         
-        drafts = generate_emails(leads_ranked, company.name, config, openai_client=openai_client, custom_subject=custom_subject if custom_subject else None)
+        try:
+            drafts = generate_emails(
+                leads_ranked,
+                company.name,
+                config,
+                openai_client=openai_client,
+                custom_subject=custom_subject if custom_subject else None,
+            )
+        except RuntimeError as e:
+            if 'OPENAI_API_KEY' in str(e):
+                flash('💡 OpenAI API key not configured. Using template-based emails instead.', 'info')
+                drafts = generate_emails(
+                    leads_ranked,
+                    company.name,
+                    config,
+                    openai_client=None,
+                    custom_subject=custom_subject if custom_subject else None,
+                )
+            else:
+                raise
         
         write_markdown(company, drafts, 'send_sheet.md')
         write_csv(company, drafts, 'send_sheet.csv')
@@ -247,8 +272,14 @@ def batch():
         # Use multi-provider finder for batch processing
         openai_client = None
         if config.use_openai_drafts:
-            openai_key = require_env('OPENAI_API_KEY')
-            openai_client = OpenAIDraftClient(openai_key, OpenAIDraftConfig(model=config.openai_model))
+            # Try to get OpenAI key from environment variable, then user settings
+            openai_key = os.getenv('OPENAI_API_KEY') or current_user.get_api_key('openai')
+            if openai_key:
+                os.environ['OPENAI_API_KEY'] = openai_key
+                openai_client = OpenAIDraftClient(openai_key, OpenAIDraftConfig(model=config.openai_model))
+            else:
+                config.use_openai_drafts = False
+                flash('💡 OpenAI API key not configured. Add it in Settings to enable AI-generated drafts.', 'info')
         
         all_drafts = []
         all_leads = 0
@@ -264,7 +295,14 @@ def batch():
                     leads_ranked = rank_leads(leads_filtered, config.target_roles)
                     
                     if leads_ranked:
-                        drafts = generate_emails(leads_ranked, company.name, config, openai_client=openai_client)
+                        try:
+                            drafts = generate_emails(leads_ranked, company.name, config, openai_client=openai_client)
+                        except RuntimeError as e:
+                            if 'OPENAI_API_KEY' in str(e):
+                                flash('💡 OpenAI API key not configured. Using template-based emails instead.', 'info')
+                                drafts = generate_emails(leads_ranked, company.name, config, openai_client=None)
+                            else:
+                                raise
                         all_drafts.extend(drafts)
                         all_leads += len(drafts)
                         
@@ -868,13 +906,8 @@ def save_api_keys():
             validated_count += 1
         
         if openai_key and not openai_key.startswith('•'):
-            valid, msg = _validate_openai_key(openai_key)
-            if valid:
-                current_user.set_api_key('openai', openai_key)
-                if "Verified" in msg:
-                    flash(f'OpenAI: {msg}', 'success')
-            else:
-                failed_validations.append(f'OpenAI: {msg}')
+            current_user.set_api_key('openai', openai_key)
+            validated_count += 1
         
         db.session.commit()
         
@@ -920,27 +953,27 @@ def gmail_setup():
 @app.route('/connect-gmail')
 @login_required
 def connect_gmail():
-    """Initiate Gmail OAuth flow (improved with service)"""
+    """Initiate Gmail OAuth flow (simple code-based flow)"""
     if not gmail_service.is_configured():
         flash('⚠️ Gmail OAuth not configured. Please complete the setup steps first.', 'warning')
         return redirect(url_for('gmail_setup'))
     
     try:
-        # Generate OAuth URL using service
-        redirect_uri = url_for('gmail_oauth_callback', _external=True)
-        result = gmail_service.get_oauth_url(redirect_uri)
+        # Generate simple OAuth flow (no redirect URI needed!)
+        result = gmail_service.get_simple_auth_flow()
         
         if not result:
             flash('❌ Error generating OAuth URL. Please try again.', 'error')
             return redirect(url_for('gmail_setup'))
         
-        authorization_url, state = result
+        flow, authorization_url = result
         
-        # Store state in session for verification
-        session['oauth_state'] = state
+        # Store only necessary data in session (Flow can't be pickled)
+        session['oauth_user_id'] = current_user.id
+        session['gmail_auth_url'] = authorization_url
         
-        # Redirect to Google's OAuth page
-        return redirect(authorization_url)
+        # Redirect to code entry page (user will click link there)
+        return redirect(url_for('gmail_enter_code'))
         
     except Exception as e:
         flash(f'❌ Error initiating Gmail OAuth: {str(e)}', 'error')
@@ -948,31 +981,58 @@ def connect_gmail():
 
 
 @app.route('/oauth2callback')
-@login_required
 def gmail_oauth_callback():
-    """Handle OAuth callback from Google (improved with service)"""
-    # Verify state to prevent CSRF
-    state = session.get('oauth_state')
-    if not state:
-        flash('⚠️ Invalid OAuth state. Please try connecting again.', 'warning')
-        return redirect(url_for('gmail_setup'))
+    """Handle OAuth callback - Google shows code, user pastes it"""
+    # Get authorization code from query params
+    code = request.args.get('code')
+    error = request.args.get('error')
+    
+    user_id = session.get('oauth_user_id')
+    flow_data = session.get('gmail_flow')
+    
+    # Handle errors
+    if error:
+        flash(f'⚠️ OAuth error: {error}', 'warning')
+        return redirect(url_for('login'))
+    
+    if not user_id or not flow_data:
+        flash('⚠️ Session expired. Please try connecting again.', 'warning')
+        return redirect(url_for('login'))
+    
+    # Get user from stored ID
+    user = User.query.get(user_id)
+    if not user:
+        flash('⚠️ User not found. Please log in again.', 'warning')
+        return redirect(url_for('login'))
+    
+    # If no code, show instructions to get it
+    if not code:
+        # Google will show code on screen, render page asking user to paste it
+        return render_template('gmail_code_input.html')
     
     try:
-        # Handle OAuth callback using service
-        redirect_uri = url_for('gmail_oauth_callback', _external=True)
-        credentials_json = gmail_service.handle_oauth_callback(
-            state=state,
-            redirect_uri=redirect_uri,
-            authorization_response=request.url
-        )
+        # Restore flow from session
+        import pickle
+        import base64
+        flow = pickle.loads(base64.b64decode(flow_data))
+        
+        # Exchange code for credentials
+        credentials_json = gmail_service.exchange_code_for_token(flow, code)
         
         if not credentials_json:
-            flash('❌ Error connecting Gmail. Please try again.', 'error')
-            return redirect(url_for('gmail_setup'))
+            flash('❌ Error exchanging code for token. Please try again.', 'error')
+            return redirect(url_for('login'))
         
         # Store credentials in database (encrypted)
-        current_user.set_gmail_token(credentials_json)
+        user.set_gmail_token(credentials_json)
         db.session.commit()
+        
+        # Re-establish user session (log user back in)
+        login_user(user, remember=True)
+        
+        # Clear OAuth session data
+        session.pop('gmail_flow', None)
+        session.pop('oauth_user_id', None)
         
         # Test the connection
         if gmail_service.test_connection(credentials_json):
@@ -985,11 +1045,79 @@ def gmail_oauth_callback():
         else:
             flash('⚠️ Gmail connected but connection test failed. You may need to reconnect.', 'warning')
         
+        return redirect(url_for('gmail_setup'))
+        
     except Exception as e:
         flash(f'❌ Error connecting Gmail: {str(e)}', 'error')
+        return redirect(url_for('login'))
     
     return redirect(url_for('gmail_setup'))
 
+
+@app.route('/gmail-enter-code', methods=['GET', 'POST'])
+def gmail_enter_code():
+    """Page where user enters the authorization code from Google"""
+    if request.method == 'POST':
+        code = request.form.get('code', '').strip()
+        user_id = session.get('oauth_user_id')
+        
+        if not code:
+            flash('⚠️ Please enter the authorization code.', 'warning')
+            return render_template('gmail_enter_code.html')
+        
+        if not user_id:
+            flash('⚠️ Session expired. Please try connecting again.', 'warning')
+            return redirect(url_for('login'))
+        
+        # Get user
+        user = User.query.get(user_id)
+        if not user:
+            flash('⚠️ User not found. Please log in again.', 'warning')
+            return redirect(url_for('login'))
+        
+        try:
+            # Create a fresh flow and exchange code
+            result = gmail_service.get_simple_auth_flow()
+            if not result:
+                flash('❌ Error creating OAuth flow. Please try again.', 'error')
+                return render_template('gmail_enter_code.html')
+            
+            flow, _ = result
+            credentials_json = gmail_service.exchange_code_for_token(flow, code)
+            
+            if not credentials_json:
+                flash('❌ Invalid authorization code. Please try again.', 'error')
+                return render_template('gmail_enter_code.html')
+            
+            # Store credentials
+            user.set_gmail_token(credentials_json)
+            db.session.commit()
+            
+            # Re-login user
+            login_user(user, remember=True)
+            
+            # Clear session
+            session.pop('gmail_auth_url', None)
+            session.pop('oauth_user_id', None)
+            
+            # Test connection
+            if gmail_service.test_connection(credentials_json):
+                user_info = gmail_service.get_user_info(credentials_json)
+                if user_info:
+                    flash(f'✅ Gmail connected successfully! Account: {user_info["email"]}', 'success')
+                else:
+                    flash('✅ Gmail connected successfully!', 'success')
+            else:
+                flash('⚠️ Gmail connected but test failed.', 'warning')
+            
+            return redirect(url_for('gmail_setup'))
+            
+        except Exception as e:
+            flash(f'❌ Error: {str(e)}', 'error')
+            return render_template('gmail_enter_code.html')
+    
+    # GET request - show the form
+    return render_template('gmail_enter_code.html')
 
 
 @app.route('/disconnect-gmail', methods=['POST'])
