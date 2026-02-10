@@ -68,6 +68,16 @@
         .help-box h4 { color: #667eea; margin-bottom: 10px; font-size: 18px; }
         .help-box ul { margin-left: 20px; color: #555; line-height: 2; }
         .help-box ul li strong { color: #333; }
+        .checklist { background: #f6f7ff; border: 1px solid #e4e7ff; padding: 22px; border-radius: 12px; margin-bottom: 25px; }
+        .checklist h3 { color: #333; font-size: 18px; margin-bottom: 12px; }
+        .checklist-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 12px 0; border-bottom: 1px dashed #e0e0e0; }
+        .checklist-row:last-child { border-bottom: none; }
+        .checklist-status { font-weight: 700; font-size: 12px; padding: 4px 10px; border-radius: 10px; }
+        .checklist-status.done { background: #4caf50; color: white; }
+        .checklist-status.todo { background: #ffe0b2; color: #8a4b00; }
+        .checklist-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+        .btn-link { padding: 10px 14px; border-radius: 10px; text-decoration: none; font-weight: 600; font-size: 13px; border: 2px solid #667eea; color: #667eea; }
+        .btn-link.primary { background: #667eea; color: white; }
     </style>
 </head>
 <body>
@@ -79,7 +89,9 @@
                 <a href="{{ url_for('index') }}">🎯 Generate Leads</a>
                 <a href="{{ url_for('dashboard') }}">📊 Dashboard</a>
                 <a href="{{ url_for('batch') }}">📋 Batch</a>
+                <a href="{{ url_for('cold_email') }}">✍️ Cold Email</a>
                 <a href="{{ url_for('gmail_setup') }}">📧 Gmail</a>
+                <a href="https://mail.google.com/mail/u/0/#drafts" target="_blank">📬 Drafts</a>
                 <a href="{{ url_for('auth.logout') }}">Logout</a>
             </div>
         </div>
@@ -94,6 +106,56 @@
                 {% endfor %}
             {% endif %}
         {% endwith %}
+
+        {% if onboarding %}
+        <div class="alert info">
+            <div class="icon">🚀</div>
+            <div class="alert-content">
+                <h3>Welcome! Start Here</h3>
+                <p>Step 1: Add a provider key. Step 2: Connect Gmail (optional). Then generate your first leads.</p>
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="checklist">
+            <h3>✅ Setup Checklist</h3>
+            <div class="checklist-row">
+                <div>
+                    <strong>1) Add at least one provider</strong><br>
+                    <small>Required to find leads.</small>
+                </div>
+                <span class="checklist-status {% if user_provider_count > 0 %}done{% else %}todo{% endif %}">
+                    {% if user_provider_count > 0 %}Done{% else %}To Do{% endif %}
+                </span>
+            </div>
+            <div class="checklist-row">
+                <div>
+                    <strong>2) Connect Gmail (optional)</strong><br>
+                    <small>Creates drafts automatically.</small>
+                </div>
+                <span class="checklist-status {% if user.has_gmail_connected() %}done{% else %}todo{% endif %}">
+                    {% if user.has_gmail_connected() %}Done{% else %}To Do{% endif %}
+                </span>
+            </div>
+            <div class="checklist-row">
+                <div>
+                    <strong>3) Generate leads</strong><br>
+                    <small>Use the main generator to get contacts.</small>
+                </div>
+                <div class="checklist-actions">
+                    <a class="btn-link primary" href="{{ url_for('index') }}">Generate Leads</a>
+                </div>
+            </div>
+            <div class="checklist-row">
+                <div>
+                    <strong>4) Try the Cold Email Wizard</strong><br>
+                    <small>Create a polished email in minutes.</small>
+                </div>
+                <div class="checklist-actions">
+                    <a class="btn-link" href="{{ url_for('cold_email') }}">Open Wizard</a>
+                </div>
+            </div>
+        </div>
         
         {% if user_provider_count == 0 %}
         <div class="alert warning">

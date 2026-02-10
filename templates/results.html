@@ -15,7 +15,7 @@
         .container { background: white; padding: 50px 45px; border-radius: 20px; box-shadow: 0 25px 80px rgba(0,0,0,0.3); max-width: 800px; margin: 0 auto; }
         .success-icon { text-align: center; font-size: 80px; margin-bottom: 30px; animation: bounce 1s; }
         @keyframes bounce { 0%, 20%, 50%, 80%, 100% { transform: translateY(0); } 40% { transform: translateY(-20px); } 60% { transform: translateY(-10px); } }
-        .actions { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 30px; }
+        .actions { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 30px; }
         .action-btn { display: flex; align-items: center; justify-content: center; gap: 10px; padding: 18px; border-radius: 12px; text-decoration: none; font-weight: 600; transition: all 0.3s; border: none; cursor: pointer; font-size: 15px; }
         .btn-primary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4); }
         .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6); }
@@ -27,6 +27,7 @@
         .tips { background: linear-gradient(135deg, #e0e7ff 0%, #e0c3fc 100%); padding: 20px; border-radius: 12px; margin-top: 25px; }
         .tips h4 { color: #667eea; margin-bottom: 12px; font-size: 16px; }
         .tips ul { margin-left: 20px; color: #555; font-size: 14px; line-height: 2; }
+        .where { background: #f8f9fa; padding: 16px; border-radius: 12px; margin-top: 20px; font-size: 13px; color: #555; }
         .nav { text-align: center; margin-top: 20px; }
         .nav a { color: #667eea; text-decoration: none; font-weight: 600; }
         .nav a:hover { text-decoration: underline; }
@@ -49,6 +50,9 @@
             <a href="{{ url_for('download', filename='send_sheet.md') }}" class="action-btn btn-secondary">
                 <span>📄</span> Download Markdown
             </a>
+            <a href="https://mail.google.com/mail/u/0/#drafts" target="_blank" class="action-btn btn-secondary">
+                <span>📧</span> Open Gmail Drafts
+            </a>
         </div>
         
         <div class="preview">
@@ -59,12 +63,16 @@
         <div class="tips">
             <h4>💡 Next Steps:</h4>
             <ul>
-                <li>✅ Review all emails in send_sheet.md</li>
+                <li>✅ Download CSV or Markdown to review all drafts</li>
                 <li>✅ Personalize top 5-10 emails for better response</li>
-                <li>✅ Check Gmail drafts if you created them</li>
+                <li>✅ If Gmail was connected, drafts are already in Gmail → Drafts</li>
                 <li>✅ Send 10-15 emails per day (avoid spam filters)</li>
                 <li>✅ Follow up after 3-5 days if no response</li>
             </ul>
+        </div>
+
+        <div class="where">
+            <strong>Where are my drafts?</strong> If Gmail was connected, open Gmail and check the Drafts folder for newly created emails.
         </div>
         
         <div class="nav">

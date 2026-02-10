@@ -51,24 +51,31 @@ domains:
       - Strategy Manager
       - Business Analyst
     background: "BITS Goa graduate with product and analytics experience seeking consulting roles"
-    
+  
   engineering:
     name: "Software Engineering"
     target_roles:
       - CTO
       - VP Engineering
+      - Head of Engineering
+      - Director of Engineering
       - Engineering Manager
-      - Tech Lead
+      - Staff Engineer
+      - Principal Engineer
       - Senior Software Engineer
       - Software Engineer
-    background: "BITS Goa graduate with PM and technical background"
-    
+    background: "Experienced builder shipping scalable products with a strong technical foundation"
+  
   data_science:
     name: "Data Science & Analytics"
     target_roles:
       - Head of Data
+      - Director of Data
+      - Director of Analytics
       - Data Science Manager
       - Senior Data Scientist
       - Data Scientist
       - Analytics Manager
-    background: "BITS Goa graduate building AI/ML solutions"
+      - Senior Analyst
+      - Data Analyst
+    background: "Data-driven product thinker focused on experimentation, insights, and measurable impact"

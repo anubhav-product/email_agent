@@ -28,9 +28,15 @@
         button { width: 100%; padding: 16px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 10px; font-size: 16px; font-weight: 600; cursor: pointer; transition: all 0.3s; box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4); }
         button:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6); }
         button:active { transform: translateY(0); }
+        button:disabled { background: #b0b0b0; cursor: not-allowed; box-shadow: none; transform: none; }
         .flash { padding: 16px 20px; margin-bottom: 25px; border-radius: 10px; font-weight: 500; display: flex; align-items: center; gap: 10px; }
         .flash.success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
         .flash.error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .quick-start { background: #f6f7ff; border: 1px solid #e4e7ff; border-radius: 12px; padding: 16px 18px; margin-bottom: 25px; }
+        .quick-start h3 { color: #333; font-size: 16px; margin-bottom: 10px; }
+        .quick-start ol { margin-left: 18px; color: #555; font-size: 13px; line-height: 1.8; }
+        .quick-start a { color: #667eea; font-weight: 600; text-decoration: none; }
+        .quick-start a:hover { text-decoration: underline; }
         .features { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 30px; }
         .feature { background: #f8f9fa; padding: 15px; border-radius: 10px; font-size: 13px; }
         .feature strong { display: block; color: #667eea; margin-bottom: 5px; font-size: 14px; }
@@ -45,7 +51,9 @@
         <div style="margin-top: 15px; display: flex; justify-content: center; gap: 15px; flex-wrap: wrap;">
             <a href="{{ url_for('dashboard') }}" style="color: white; text-decoration: none; background: rgba(255,255,255,0.2); padding: 10px 20px; border-radius: 8px; font-weight: 600;">📊 Dashboard</a>
             <a href="{{ url_for('batch') }}" style="color: white; text-decoration: none; background: rgba(255,255,255,0.2); padding: 10px 20px; border-radius: 8px; font-weight: 600;">📋 Batch</a>
+            <a href="{{ url_for('cold_email') }}" style="color: white; text-decoration: none; background: rgba(255,255,255,0.2); padding: 10px 20px; border-radius: 8px; font-weight: 600;">✍️ Cold Email</a>
             <a href="{{ url_for('gmail_setup') }}" style="color: white; text-decoration: none; background: rgba(255,255,255,0.2); padding: 10px 20px; border-radius: 8px; font-weight: 600;">📧 Gmail</a>
+            <a href="https://mail.google.com/mail/u/0/#drafts" target="_blank" style="color: white; text-decoration: none; background: rgba(255,255,255,0.2); padding: 10px 20px; border-radius: 8px; font-weight: 600;">📬 Drafts</a>
             <a href="{{ url_for('settings') }}" style="color: white; text-decoration: none; background: rgba(255,255,255,0.2); padding: 10px 20px; border-radius: 8px; font-weight: 600;">⚙️ Settings</a>
             <a href="{{ url_for('auth.logout') }}" style="color: white; text-decoration: none; background: rgba(255,255,255,0.2); padding: 10px 20px; border-radius: 8px; font-weight: 600;">Logout</a>
         </div>
@@ -81,6 +89,16 @@
                 {% endfor %}
             {% endif %}
         {% endwith %}
+
+        <div class="quick-start">
+            <h3>✅ Quick Start (60 seconds)</h3>
+            <ol>
+                <li>Add at least one provider key in <a href="{{ url_for('settings') }}">Settings</a>.</li>
+                <li>Connect Gmail in <a href="{{ url_for('gmail_setup') }}">Gmail Setup</a> (drafts are auto-enabled when connected).</li>
+                <li>Enter a company domain and click Generate.</li>
+                <li>Need a single best email? Try <a href="{{ url_for('cold_email') }}">Cold Email Wizard</a>.</li>
+            </ol>
+        </div>
         
         <form action="{{ url_for('generate') }}" method="POST">
             <div class="form-group">
@@ -127,7 +145,7 @@
             <div class="form-group">
                 <label><span class="emoji">📧</span>Gmail Draft Creation</label>
                 <div class="checkbox-group" style="background: {% if user.has_gmail_connected() %}#e8f5e9{% else %}#fff3cd{% endif %}; border: 2px solid {% if user.has_gmail_connected() %}#4caf50{% else %}#ffc107{% endif %};">
-                    <input type="checkbox" id="create_gmail" name="create_gmail" {% if not user.has_gmail_connected() %}disabled{% endif %}>
+                    <input type="checkbox" id="create_gmail" name="create_gmail" {% if user.has_gmail_connected() %}checked{% else %}disabled{% endif %}>
                     <label for="create_gmail" style="flex: 1;">
                         {% if user.has_gmail_connected() %}
                             ✓ Create drafts in Gmail automatically
@@ -143,7 +161,12 @@
                 {% endif %}
             </div>
             
+            {% if provider_count == 0 %}
+            <button type="submit" disabled>🔒 Add a provider to continue</button>
+            <small style="color: #b71c1c; margin-top: 10px;">Add at least one provider API key in Settings to generate leads.</small>
+            {% else %}
             <button type="submit">🚀 Generate Leads & Drafts</button>
+            {% endif %}
         </form>
         
         <div style="text-align: center; margin: 25px 0;">

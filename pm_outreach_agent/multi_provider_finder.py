@@ -27,27 +27,33 @@ class MultiProviderEmailFinder:
     
     def get_user_providers(self, user: 'User') -> Dict:
         """Get provider config for a specific user's API keys"""
+        env_hunter = os.getenv('HUNTER_API_KEY')
+        env_apollo = os.getenv('APOLLO_API_KEY')
+        env_snov = os.getenv('SNOV_API_KEY')
+        env_snov_secret = os.getenv('SNOV_CLIENT_SECRET')
+        env_findthatlead = os.getenv('FINDTHATLEAD_API_KEY')
+
         return {
             'hunter': {
-                'api_key': user.get_api_key('hunter'),
+                'api_key': user.get_api_key('hunter') or env_hunter,
                 'credits_per_month': 50,
-                'enabled': user.has_provider('hunter')
+                'enabled': user.has_provider('hunter') or bool(env_hunter)
             },
             'apollo': {
-                'api_key': user.get_api_key('apollo'),
+                'api_key': user.get_api_key('apollo') or env_apollo,
                 'credits_per_month': 50,
-                'enabled': user.has_provider('apollo')
+                'enabled': user.has_provider('apollo') or bool(env_apollo)
             },
             'snov': {
-                'api_key': user.get_api_key('snov'),
-                'client_secret': user.get_snov_secret(),
+                'api_key': user.get_api_key('snov') or env_snov,
+                'client_secret': user.get_snov_secret() or env_snov_secret,
                 'credits_per_month': 50,
-                'enabled': user.has_provider('snov')
+                'enabled': user.has_provider('snov') or bool(env_snov and (env_snov_secret or user.get_snov_secret()))
             },
             'findthatlead': {
-                'api_key': user.get_api_key('findthatlead'),
+                'api_key': user.get_api_key('findthatlead') or env_findthatlead,
                 'credits_per_month': 50,
-                'enabled': user.has_provider('findthatlead')
+                'enabled': user.has_provider('findthatlead') or bool(env_findthatlead)
             }
         }
     
@@ -127,11 +133,12 @@ class MultiProviderEmailFinder:
         # Convert Lead objects to dicts
         leads_data = [
             {
-                'name': lead.name,
+                'first_name': lead.first_name,
+                'last_name': lead.last_name,
+                'role': lead.role,
                 'email': lead.email,
-                'title': lead.title,
-                'linkedin': lead.linkedin,
-                'confidence': lead.confidence
+                'confidence': lead.confidence,
+                'company': lead.company,
             }
             for lead in leads
         ]
@@ -202,13 +209,15 @@ class MultiProviderEmailFinder:
         leads = []
         for email_data in emails:
             lead = Lead(
-                name=f"{email_data.get('first_name', '')} {email_data.get('last_name', '')}".strip(),
-                email=email_data.get('value'),
-                title=email_data.get('position'),
-                linkedin=email_data.get('linkedin'),
-                confidence=email_data.get('confidence', 0) / 100  # Convert to 0-1
+                first_name=(email_data.get('first_name') or '').strip(),
+                last_name=(email_data.get('last_name') or '').strip(),
+                role=(email_data.get('position') or '').strip(),
+                email=(email_data.get('value') or '').strip(),
+                confidence=int(email_data.get('confidence') or 0),
+                company=(email_data.get('company') or domain).strip(),
             )
-            leads.append(lead)
+            if lead.email:
+                leads.append(lead)
         
         return leads
     
@@ -233,14 +242,20 @@ class MultiProviderEmailFinder:
         
         leads = []
         for person in people:
+            full_name = (person.get('name') or '').strip()
+            name_parts = [part for part in full_name.split(' ') if part]
+            first_name = name_parts[0] if name_parts else ''
+            last_name = ' '.join(name_parts[1:]) if len(name_parts) > 1 else ''
             lead = Lead(
-                name=person.get('name'),
-                email=person.get('email'),
-                title=person.get('title'),
-                linkedin=person.get('linkedin_url'),
-                confidence=0.8  # Apollo doesn't provide confidence
+                first_name=first_name,
+                last_name=last_name,
+                role=(person.get('title') or '').strip(),
+                email=(person.get('email') or '').strip(),
+                confidence=80,
+                company=(person.get('organization', {}).get('name') or domain).strip(),
             )
-            leads.append(lead)
+            if lead.email:
+                leads.append(lead)
         
         return leads
     
@@ -250,14 +265,14 @@ class MultiProviderEmailFinder:
         client_secret = config['client_secret']
         
         # First, get access token
-        auth_url = "https://api.snov.io/v1/get-access-token"
+        auth_url = "https://api.snov.io/v1/oauth/access_token"
         auth_data = {
             "client_id": api_key,
             "client_secret": client_secret,
             "grant_type": "client_credentials"
         }
         
-        auth_response = requests.post(auth_url, json=auth_data, timeout=30)
+        auth_response = requests.post(auth_url, data=auth_data, timeout=30)
         auth_response.raise_for_status()
         access_token = auth_response.json().get('access_token')
         
@@ -274,13 +289,15 @@ class MultiProviderEmailFinder:
         leads = []
         for email_data in emails:
             lead = Lead(
-                name=f"{email_data.get('firstName', '')} {email_data.get('lastName', '')}".strip(),
-                email=email_data.get('email'),
-                title=email_data.get('position'),
-                linkedin=email_data.get('socialUrl'),
-                confidence=0.8
+                first_name=(email_data.get('firstName') or '').strip(),
+                last_name=(email_data.get('lastName') or '').strip(),
+                role=(email_data.get('position') or '').strip(),
+                email=(email_data.get('email') or '').strip(),
+                confidence=80,
+                company=(email_data.get('companyName') or domain).strip(),
             )
-            leads.append(lead)
+            if lead.email:
+                leads.append(lead)
         
         return leads
     
@@ -300,13 +317,15 @@ class MultiProviderEmailFinder:
         leads = []
         for email_data in emails:
             lead = Lead(
-                name=f"{email_data.get('first_name', '')} {email_data.get('last_name', '')}".strip(),
-                email=email_data.get('email'),
-                title=email_data.get('position'),
-                linkedin=email_data.get('linkedin'),
-                confidence=0.8
+                first_name=(email_data.get('first_name') or '').strip(),
+                last_name=(email_data.get('last_name') or '').strip(),
+                role=(email_data.get('position') or '').strip(),
+                email=(email_data.get('email') or '').strip(),
+                confidence=80,
+                company=(email_data.get('company') or domain).strip(),
             )
-            leads.append(lead)
+            if lead.email:
+                leads.append(lead)
         
         return leads
     

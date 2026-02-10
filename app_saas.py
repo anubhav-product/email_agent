@@ -48,7 +48,7 @@ def landing():
     """Homepage - Landing page or App"""
     if current_user.is_authenticated:
         # If logged in, check if they have providers configured
-        provider_count = len(current_user.get_configured_providers())
+        provider_count = len(email_finder.get_enabled_providers(current_user))
         if provider_count == 0:
             # No providers - redirect to settings first
             flash('👋 Welcome! Please add at least one email provider API key to get started.', 'info')
@@ -62,11 +62,146 @@ def landing():
 @login_required
 def index():
     """Main app interface (requires login)"""
-    provider_count = len(current_user.get_configured_providers())
     enabled_providers = email_finder.get_enabled_providers(current_user)
+    provider_count = len(enabled_providers)
     return render_template('index.html', user=current_user, 
                          provider_count=provider_count,
                          enabled_providers=enabled_providers)
+
+
+def _build_cold_email_fallback(form_data: dict) -> dict:
+    subject = form_data.get('custom_subject') or f"Quick note about {form_data['target_company']}"
+    sender = form_data.get('about_you')
+    skills = form_data.get('skills')
+    projects = form_data.get('projects')
+    achievement = form_data.get('achievement')
+    impact = form_data.get('impact')
+    why_fit = form_data.get('why_fit')
+    cta = form_data.get('cta') or "Would you be open to a quick chat?"
+
+    body_lines = [
+        f"Hi there,",
+        "",
+        f"I'm {sender} and I'm reaching out about {form_data['target_role']} opportunities at {form_data['target_company']}.",
+    ]
+
+    if skills:
+        body_lines.append(f"Core strengths: {skills}.")
+    if projects:
+        body_lines.append(f"Recent work: {projects}.")
+    if achievement:
+        body_lines.append(f"Achievement: {achievement}.")
+    if impact:
+        body_lines.append(f"Impact: {impact}.")
+    if why_fit:
+        body_lines.append(f"Why {form_data['target_company']}: {why_fit}.")
+
+    body_lines.extend([
+        "",
+        cta,
+        "",
+        "Best regards,",
+        form_data.get('signature_name') or ""
+    ])
+
+    body = "\n".join([line for line in body_lines if line is not None]).strip()
+    return {"subject": subject, "body": body}
+
+
+def _split_subject_body(text: str, default_subject: str) -> dict:
+    subject = ""
+    body = text.strip()
+    lines = [line.strip() for line in text.splitlines() if line.strip()]
+    for idx, line in enumerate(lines):
+        if line.lower().startswith('subject:'):
+            subject = line.split(':', 1)[1].strip()
+            body = "\n".join(lines[idx + 1:]).strip()
+            break
+    if not subject:
+        first = lines[0] if lines else ""
+        if 0 < len(first) <= 80:
+            subject = first
+            body = "\n".join(lines[1:]).strip()
+    if not subject:
+        subject = default_subject
+    return {"subject": subject, "body": body}
+
+
+@app.route('/cold-email', methods=['GET', 'POST'])
+@login_required
+def cold_email():
+    """Cold email wizard with short profile + AI polish"""
+    form_data = {
+        'about_you': '',
+        'signature_name': '',
+        'target_company': '',
+        'target_role': '',
+        'why_fit': '',
+        'achievement': '',
+        'impact': '',
+        'skills': '',
+        'projects': '',
+        'cta': '',
+        'tone': 'confident',
+        'custom_subject': ''
+    }
+    output = None
+    used_openai = False
+
+    if request.method == 'POST':
+        for key in form_data.keys():
+            form_data[key] = request.form.get(key, '').strip()
+
+        required_fields = ['about_you', 'target_company', 'target_role']
+        missing = [field for field in required_fields if not form_data[field]]
+        if missing:
+            flash('Please fill in: about you, target company, and target role.', 'error')
+        else:
+            default_subject = form_data.get('custom_subject') or f"Quick note about {form_data['target_company']}"
+            openai_key = current_user.get_api_key('openai') or os.getenv('OPENAI_API_KEY')
+            if openai_key:
+                try:
+                    config = load_config('config.yaml')
+                    from openai import OpenAI
+                    client = OpenAI(api_key=openai_key)
+                    system_prompt = (
+                        "You are a cold email expert. Write concise, polished outreach emails "
+                        "(120-160 words) that sound human and confident. Avoid hype and jargon."
+                    )
+                    user_prompt = (
+                        "Write a cold email based on this info:\n"
+                        f"About me: {form_data['about_you']}\n"
+                        f"Target company: {form_data['target_company']}\n"
+                        f"Target role: {form_data['target_role']}\n"
+                        f"Why I fit: {form_data['why_fit']}\n"
+                        f"Achievement: {form_data['achievement']}\n"
+                        f"Impact: {form_data['impact']}\n"
+                        f"Skills: {form_data['skills']}\n"
+                        f"Projects: {form_data['projects']}\n"
+                        f"CTA: {form_data['cta']}\n"
+                        f"Tone: {form_data['tone']}\n\n"
+                        "Return output as:\nSubject: <subject line>\n<email body>"
+                    )
+                    response = client.chat.completions.create(
+                        model=config.openai_model,
+                        messages=[
+                            {"role": "system", "content": system_prompt},
+                            {"role": "user", "content": user_prompt},
+                        ],
+                        temperature=0.6,
+                        max_tokens=500,
+                    )
+                    text = response.choices[0].message.content.strip()
+                    output = _split_subject_body(text, default_subject)
+                    used_openai = True
+                except Exception:
+                    output = _build_cold_email_fallback(form_data)
+                    flash('⚠️ AI unavailable. Using a polished template instead.', 'warning')
+            else:
+                output = _build_cold_email_fallback(form_data)
+                flash('💡 OpenAI key not configured. Using a polished template instead.', 'info')
+
+    return render_template('cold_email.html', user=current_user, form=form_data, output=output, used_openai=used_openai)
 
 
 @app.route('/generate', methods=['POST'])
@@ -86,9 +221,9 @@ def generate():
             flash('Domain is required', 'error')
             return redirect(url_for('index'))
         
-        # Proactive check: Does user have any email providers configured?
-        if not current_user.get_configured_providers():
-            flash('⚠️ No email providers configured! Please add at least one API key in Settings to find leads.', 'error')
+        # Proactive check: Does user have any email providers configured or set via env?
+        if not email_finder.get_enabled_providers(current_user):
+            flash('⚠️ No email providers configured! Add a Hunter, Apollo, Snov, or FindThatLead key in Settings to find leads. (OpenAI is only for writing emails.)', 'error')
             return redirect(url_for('settings'))
         
         config = load_config('config.yaml')
@@ -130,36 +265,43 @@ def generate():
             flash(f"No leads found for {company.domain} using providers: {provider_list}. This could mean: (1) No employees listed publicly, (2) Rate limits reached, or (3) Try adding more API keys in Settings.", "warning")
             return redirect(url_for('index'))
         
-        leads_filtered = filter_leads(leads_raw, config)
-        leads_ranked = rank_leads(leads_filtered, config.target_roles)
+        leads_filtered = filter_leads(leads_raw, config.target_roles, config.excluded_roles, config.min_email_confidence)
+        leads_ranked = rank_leads(leads_filtered)
         
         if not leads_ranked:
             flash(f"No leads matched target roles for {domain_type}", "error")
-            return redirect(url_for('landing'))
+            return redirect(url_for('index'))
+        
+        # Extract Lead objects from RankedLead for email generation
+        ordered_leads = [item.lead for item in leads_ranked]
         
         try:
             drafts = generate_emails(
-                leads_ranked,
-                company.name,
-                config,
+                ordered_leads,
+                config.portfolio_url,
+                config.candidate_background_summary,
+                config.tone,
                 openai_client=openai_client,
                 custom_subject=custom_subject if custom_subject else None,
+                resume_url=resume_url if resume_url else None,
             )
         except RuntimeError as e:
             if 'OPENAI_API_KEY' in str(e):
                 flash('💡 OpenAI API key not configured. Using template-based emails instead.', 'info')
                 drafts = generate_emails(
-                    leads_ranked,
-                    company.name,
-                    config,
+                    ordered_leads,
+                    config.portfolio_url,
+                    config.candidate_background_summary,
+                    config.tone,
                     openai_client=None,
                     custom_subject=custom_subject if custom_subject else None,
+                    resume_url=resume_url if resume_url else None,
                 )
             else:
                 raise
         
-        write_markdown(company, drafts, 'send_sheet.md')
-        write_csv(company, drafts, 'send_sheet.csv')
+        write_markdown('send_sheet.md', leads_ranked, drafts)
+        write_csv('send_sheet.csv', leads_ranked, drafts)
         
         # Create Gmail drafts if requested and user is connected
         if create_gmail:
@@ -173,9 +315,9 @@ def generate():
                     if gmail_token:
                         # Prepare draft data for bulk creation
                         draft_data_list = []
-                        for draft in drafts:
+                        for lead, draft in zip(ordered_leads, drafts):
                             draft_data_list.append({
-                                'to': draft.email,
+                                'to': lead.email,
                                 'subject': draft.subject,
                                 'body': draft.body
                             })
@@ -236,7 +378,15 @@ def generate():
 @login_required
 def results():
     count = request.args.get('count', 0)
-    return render_template('results.html', count=count, user=current_user)
+    content = None
+    preview_path = os.path.join(os.getcwd(), 'send_sheet.md')
+    if os.path.exists(preview_path):
+        try:
+            with open(preview_path, 'r', encoding='utf-8') as handle:
+                content = handle.read()
+        except Exception:
+            content = None
+    return render_template('results.html', count=count, user=current_user, content=content)
 
 
 @app.route('/download/<filename>')
@@ -282,6 +432,7 @@ def batch():
                 flash('💡 OpenAI API key not configured. Add it in Settings to enable AI-generated drafts.', 'info')
         
         all_drafts = []
+        all_ranked = []
         all_leads = 0
         
         for domain in domains:
@@ -291,19 +442,22 @@ def batch():
                 leads_raw = email_finder.find_leads(company.domain, domain_type, current_user)
                 
                 if leads_raw:
-                    leads_filtered = filter_leads(leads_raw, config)
-                    leads_ranked = rank_leads(leads_filtered, config.target_roles)
+                    leads_filtered = filter_leads(leads_raw, config.target_roles, config.excluded_roles, config.min_email_confidence)
+                    leads_ranked = rank_leads(leads_filtered)
                     
                     if leads_ranked:
+                        # Extract Lead objects from RankedLead
+                        ordered_leads = [item.lead for item in leads_ranked]
                         try:
-                            drafts = generate_emails(leads_ranked, company.name, config, openai_client=openai_client)
+                            drafts = generate_emails(ordered_leads, config.portfolio_url, config.candidate_background_summary, config.tone, openai_client=openai_client, custom_subject=custom_subject if custom_subject else None, resume_url=resume_url if resume_url else None)
                         except RuntimeError as e:
                             if 'OPENAI_API_KEY' in str(e):
                                 flash('💡 OpenAI API key not configured. Using template-based emails instead.', 'info')
-                                drafts = generate_emails(leads_ranked, company.name, config, openai_client=None)
+                                drafts = generate_emails(ordered_leads, config.portfolio_url, config.candidate_background_summary, config.tone, openai_client=None, custom_subject=custom_subject if custom_subject else None, resume_url=resume_url if resume_url else None)
                             else:
                                 raise
                         all_drafts.extend(drafts)
+                        all_ranked.extend(leads_ranked)
                         all_leads += len(drafts)
                         
                         search = Search(
@@ -323,8 +477,8 @@ def batch():
         db.session.commit()
         
         if all_drafts:
-            write_markdown(CompanyInput(name="Batch", domain="batch"), all_drafts, 'send_sheet.md')
-            write_csv(CompanyInput(name="Batch", domain="batch"), all_drafts, 'send_sheet.csv')
+            write_markdown('send_sheet.md', all_ranked, all_drafts)
+            write_csv('send_sheet.csv', all_ranked, all_drafts)
             flash(f'✅ Batch complete! {all_leads} total leads from {len(domains)} companies.', 'success')
             return redirect(url_for('results', count=all_leads))
         else:
@@ -376,11 +530,12 @@ def provider_status():
 @login_required
 def settings():
     """Settings page - User's own API key management"""
-    user_provider_count = len(current_user.get_configured_providers())
-    
+    user_provider_count = len(email_finder.get_enabled_providers(current_user))
+    onboarding = request.args.get('onboarding') == '1'
     return render_template('settings_user.html', 
                          user=current_user,
-                         user_provider_count=user_provider_count)
+                         user_provider_count=user_provider_count,
+                         onboarding=onboarding)
 
 
 @app.route('/templates')
@@ -934,6 +1089,8 @@ def gmail_setup():
     """Dedicated Gmail setup page with user-friendly interface"""
     connected = current_user.has_gmail_connected()
     user_info = None
+    if not connected and current_user.gmail_token_encrypted:
+        flash('⚠️ Stored Gmail token could not be decrypted. Set ENCRYPTION_KEY (or SECRET_KEY) and reconnect Gmail.', 'warning')
     
     if connected:
         # Get Gmail account info

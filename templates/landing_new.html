@@ -94,6 +94,8 @@
             .hero .subtitle { font-size: 20px; }
             .section-title { font-size: 36px; }
             .nav-links { display: none; }
+            .hero-cta { flex-direction: column; align-items: center; }
+            .hero-cta .btn { width: 100%; max-width: 340px; text-align: center; }
         }
     </style>
 </head>
@@ -124,6 +126,7 @@
             <div class="hero-cta">
                 <a href="{{ url_for('auth.signup') }}" class="btn btn-white">Start Free →</a>
                 <a href="#how-it-works" class="btn btn-outline">See How It Works</a>
+                <a href="{{ url_for('auth.login', next=url_for('cold_email')) }}" class="btn btn-outline">Run Cold Email Wizard</a>
             </div>
             <div class="hero-stats">
                 <div class="hero-stat">

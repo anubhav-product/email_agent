@@ -1,6 +1,7 @@
 # Authentication routes for SaaS
 from flask import Blueprint, render_template, redirect, url_for, request, flash
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
+from datetime import datetime
 from database import db, User
 import re
 
@@ -64,7 +65,7 @@ def signup():
         login_user(user)
         flash(f'🎉 Welcome to LeadFinder AI! Let\'s get you set up with email providers.', 'success')
         # Redirect to settings for onboarding
-        return redirect(url_for('settings'))
+        return redirect(url_for('settings', onboarding='1'))
     
     return render_template('signup.html')
 
@@ -88,7 +89,7 @@ def login():
         
         if user and user.check_password(password):
             login_user(user, remember=remember)
-            user.last_login = db.datetime.utcnow()
+            user.last_login = datetime.utcnow()
             db.session.commit()
             
             # Redirect to next page or home

@@ -4,14 +4,27 @@ from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime, timedelta
 from cryptography.fernet import Fernet
+import base64
+import hashlib
 import secrets
 import os
 
 db = SQLAlchemy()
 
 # Encryption key for API keys (in production, use env variable)
-ENCRYPTION_KEY = os.getenv('ENCRYPTION_KEY', Fernet.generate_key())
-cipher_suite = Fernet(ENCRYPTION_KEY) if isinstance(ENCRYPTION_KEY, bytes) else Fernet(ENCRYPTION_KEY.encode())
+def _get_encryption_key() -> bytes:
+    env_key = os.getenv('ENCRYPTION_KEY')
+    if env_key:
+        return env_key.encode()
+    secret_key = os.getenv('SECRET_KEY')
+    if secret_key:
+        digest = hashlib.sha256(secret_key.encode()).digest()
+        return base64.urlsafe_b64encode(digest)
+    return Fernet.generate_key()
+
+
+ENCRYPTION_KEY = _get_encryption_key()
+cipher_suite = Fernet(ENCRYPTION_KEY)
 
 
 class Organization(db.Model):
