@@ -4,13 +4,19 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard - LeadFinder</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --ink: #f9f5f0;
+            --muted: rgba(249, 245, 240, 0.7);
+            --accent: #2f7a7a;
+            --accent-warm: #e07a5f;
+        }
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Inter', sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; }
+        body { font-family: 'Space Grotesk', sans-serif; background: linear-gradient(135deg, #19343a, #2f7a7a 60%, #e07a5f 120%); min-height: 100vh; color: var(--ink); }
         table { width: 100%; border-collapse: collapse; }
-        th, td { padding: 1rem; text-align: left; border-bottom: 1px solid rgba(255,255,255,0.1); }
-        th { color: rgba(255,255,255,0.7); font-weight: 600; font-size: 0.875rem; text-transform: uppercase; }
+        th, td { padding: 1rem; text-align: left; border-bottom: 1px solid rgba(255,255,255,0.18); }
+        th { color: var(--muted); font-weight: 600; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em; }
         td { color: rgba(255,255,255,0.9); }
     </style>
 </head>
@@ -23,15 +29,11 @@
                 <p style="color: rgba(255,255,255,0.7); margin: 0.5rem 0 0;">Welcome back, {{ user.name or user.email.split('@')[0] }}!</p>
             </div>
             <div style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
-                <a href="{{ url_for('settings') }}" style="background: rgba(255,255,255,0.1); color: white; padding: 0.75rem 1.5rem; border-radius: 8px; text-decoration: none; font-weight: 500; border: 1px solid rgba(255,255,255,0.2);">
-                    ⚙️ Settings
-                </a>
-                <a href="{{ url_for('toggle_dashboard') }}" style="background: rgba(255,255,255,0.1); color: white; padding: 0.75rem 1.5rem; border-radius: 8px; text-decoration: none; font-weight: 500; border: 1px solid rgba(255,255,255,0.2);">
-                    Switch to Premium View
-                </a>
-                <a href="{{ url_for('auth.logout') }}" style="background: rgba(255,255,255,0.1); color: white; padding: 0.75rem 1.5rem; border-radius: 8px; text-decoration: none; font-weight: 500; border: 1px solid rgba(255,255,255,0.2);">
-                    Logout
-                </a>
+                <a href="{{ url_for('index') }}" style="background: rgba(255,255,255,0.14); color: white; padding: 0.6rem 1.2rem; border-radius: 999px; text-decoration: none; font-weight: 600; border: 1px solid rgba(255,255,255,0.2);">Generator</a>
+                <a href="{{ url_for('cold_email_options') }}" style="background: rgba(255,255,255,0.14); color: white; padding: 0.6rem 1.2rem; border-radius: 999px; text-decoration: none; font-weight: 600; border: 1px solid rgba(255,255,255,0.2);">Cold Email</a>
+                <a href="{{ url_for('settings') }}" style="background: rgba(255,255,255,0.14); color: white; padding: 0.6rem 1.2rem; border-radius: 999px; text-decoration: none; font-weight: 600; border: 1px solid rgba(255,255,255,0.2);">Settings</a>
+                <a href="{{ url_for('toggle_dashboard') }}" style="background: rgba(255,255,255,0.14); color: white; padding: 0.6rem 1.2rem; border-radius: 999px; text-decoration: none; font-weight: 600; border: 1px solid rgba(255,255,255,0.2);">Premium View</a>
+                <a href="{{ url_for('auth.logout') }}" style="background: rgba(255,255,255,0.14); color: white; padding: 0.6rem 1.2rem; border-radius: 999px; text-decoration: none; font-weight: 600; border: 1px solid rgba(255,255,255,0.2);">Logout</a>
             </div>
         </div>
 

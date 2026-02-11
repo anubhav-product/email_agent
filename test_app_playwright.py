@@ -33,7 +33,9 @@ def test_homepage():
             else:
                 print("❌ 'Sign Up' link NOT found")
             
-            if page.locator("text=Login").count() > 0 or page.locator("text=Log in").count() > 0:
+            if (page.locator("text=Login").count() > 0 or
+                page.locator("text=Log in").count() > 0 or
+                page.locator("text=Sign In").count() > 0):
                 print("✅ 'Login' link found")
             else:
                 print("⚠️  'Login' link NOT found")
@@ -107,6 +109,14 @@ def test_signup_flow():
                 print("✅ Successfully redirected after signup")
             else:
                 print(f"⚠️  Unexpected redirect: {current_url}")
+
+            # Check cold email options page
+            if page.locator("text=Cold Email").count() > 0:
+                page.locator("text=Cold Email").first.click()
+                page.wait_for_url("**/cold-email-options", timeout=5000)
+                has_general = page.locator("text=General Outreach").count() > 0
+                has_job = page.locator("text=Job Seeker Outreach").count() > 0
+                print(f"✅ Cold Email options visible: General={has_general}, Job={has_job}")
             
             page.screenshot(path="/tmp/after_signup.png")
             print("📸 Screenshot saved: /tmp/after_signup.png")

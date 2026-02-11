@@ -9,7 +9,7 @@ from pm_outreach_agent.multi_provider_finder import email_finder
 from pm_outreach_agent.lead_filter import filter_leads, rank_leads
 from pm_outreach_agent.email_generator import generate_emails
 from pm_outreach_agent.output_writer import write_markdown, write_csv
-from pm_outreach_agent.models import CompanyInput, Lead
+from pm_outreach_agent.models import CompanyInput, Lead, EmailDraft
 from pm_outreach_agent.utils import load_config, require_env, normalize_domain
 from pm_outreach_agent.openai_client import OpenAIDraftClient, OpenAIDraftConfig
 from pm_outreach_agent.gmail_client import create_gmail_drafts
@@ -69,8 +69,9 @@ def index():
                          enabled_providers=enabled_providers)
 
 
-def _build_cold_email_fallback(form_data: dict) -> dict:
-    subject = form_data.get('custom_subject') or f"Quick note about {form_data['target_company']}"
+def _build_cold_email_fallback(form_data: dict, mode: str) -> dict:
+    purpose = form_data.get('purpose') or form_data.get('target_company')
+    subject = form_data.get('custom_subject') or f"Quick note about {purpose}"
     sender = form_data.get('about_you')
     skills = form_data.get('skills')
     projects = form_data.get('projects')
@@ -78,12 +79,21 @@ def _build_cold_email_fallback(form_data: dict) -> dict:
     impact = form_data.get('impact')
     why_fit = form_data.get('why_fit')
     cta = form_data.get('cta') or "Would you be open to a quick chat?"
+    target_role = form_data.get('target_role')
+    target_company = form_data.get('target_company')
 
     body_lines = [
         f"Hi there,",
         "",
-        f"I'm {sender} and I'm reaching out about {form_data['target_role']} opportunities at {form_data['target_company']}.",
+        f"I'm {sender} and I'm reaching out about {purpose} at {target_company}.",
     ]
+
+    if mode == 'job':
+        if target_role:
+            body_lines.append(f"I'm interested in {target_role} opportunities and would love to connect.")
+    else:
+        if target_role:
+            body_lines.append(f"If you handle {target_role}, I'd love to connect.")
 
     if skills:
         body_lines.append(f"Core strengths: {skills}.")
@@ -127,15 +137,52 @@ def _split_subject_body(text: str, default_subject: str) -> dict:
     return {"subject": subject, "body": body}
 
 
+def _personalize_text(text: str, lead: Lead) -> str:
+    if not text:
+        return text
+    replacements = {
+        "{first_name}": lead.first_name or "there",
+        "{last_name}": lead.last_name or "",
+        "{full_name}": lead.full_name,
+        "{company}": lead.company or "",
+        "{role}": lead.role or "",
+        "{{first_name}}": lead.first_name or "there",
+        "{{last_name}}": lead.last_name or "",
+        "{{full_name}}": lead.full_name,
+        "{{company}}": lead.company or "",
+        "{{role}}": lead.role or "",
+    }
+    output = text
+    for token, value in replacements.items():
+        output = output.replace(token, value)
+    return output
+
+
+def _ensure_greeting(body: str, lead: Lead) -> str:
+    if not body:
+        return body
+    lines = body.splitlines()
+    first_line = lines[0].strip() if lines else ""
+    greeting = f"Hi {lead.first_name or 'there'},"
+    if first_line.lower().startswith(("hi ", "hello", "hey")):
+        lines[0] = greeting
+        return "\n".join(lines)
+    return "\n".join([greeting, ""] + lines)
+
+
 @app.route('/cold-email', methods=['GET', 'POST'])
 @login_required
 def cold_email():
     """Cold email wizard with short profile + AI polish"""
+    mode = request.args.get('mode') or request.form.get('mode') or 'general'
+    if mode not in ['general', 'job']:
+        mode = 'general'
     form_data = {
         'about_you': '',
         'signature_name': '',
         'target_company': '',
         'target_role': '',
+        'purpose': '',
         'why_fit': '',
         'achievement': '',
         'impact': '',
@@ -152,36 +199,63 @@ def cold_email():
         for key in form_data.keys():
             form_data[key] = request.form.get(key, '').strip()
 
-        required_fields = ['about_you', 'target_company', 'target_role']
+        required_fields = ['about_you', 'target_company', 'purpose']
+        if mode == 'job':
+            required_fields = ['about_you', 'target_company', 'target_role']
         missing = [field for field in required_fields if not form_data[field]]
         if missing:
-            flash('Please fill in: about you, target company, and target role.', 'error')
+            if mode == 'job':
+                flash('Please fill in: about you, target company, and target role.', 'error')
+            else:
+                flash('Please fill in: about you, target company, and purpose.', 'error')
         else:
-            default_subject = form_data.get('custom_subject') or f"Quick note about {form_data['target_company']}"
+            purpose = form_data.get('purpose') or form_data.get('target_company')
+            default_subject = form_data.get('custom_subject') or f"Quick note about {purpose}"
             openai_key = current_user.get_api_key('openai') or os.getenv('OPENAI_API_KEY')
             if openai_key:
                 try:
                     config = load_config('config.yaml')
                     from openai import OpenAI
                     client = OpenAI(api_key=openai_key)
-                    system_prompt = (
-                        "You are a cold email expert. Write concise, polished outreach emails "
-                        "(120-160 words) that sound human and confident. Avoid hype and jargon."
-                    )
-                    user_prompt = (
-                        "Write a cold email based on this info:\n"
-                        f"About me: {form_data['about_you']}\n"
-                        f"Target company: {form_data['target_company']}\n"
-                        f"Target role: {form_data['target_role']}\n"
-                        f"Why I fit: {form_data['why_fit']}\n"
-                        f"Achievement: {form_data['achievement']}\n"
-                        f"Impact: {form_data['impact']}\n"
-                        f"Skills: {form_data['skills']}\n"
-                        f"Projects: {form_data['projects']}\n"
-                        f"CTA: {form_data['cta']}\n"
-                        f"Tone: {form_data['tone']}\n\n"
-                        "Return output as:\nSubject: <subject line>\n<email body>"
-                    )
+                    if mode == 'job':
+                        system_prompt = (
+                            "You are a job-seeker cold email expert. Write concise, polished outreach emails "
+                            "(110-150 words) that sound human and confident. Avoid hype and jargon."
+                        )
+                        user_prompt = (
+                            "Write a job-seeker outreach email based on this info:\n"
+                            f"About me: {form_data['about_you']}\n"
+                            f"Target company: {form_data['target_company']}\n"
+                            f"Target role: {form_data['target_role']}\n"
+                            f"Why I fit: {form_data['why_fit']}\n"
+                            f"Achievement: {form_data['achievement']}\n"
+                            f"Impact: {form_data['impact']}\n"
+                            f"Skills: {form_data['skills']}\n"
+                            f"Projects: {form_data['projects']}\n"
+                            f"CTA: {form_data['cta']}\n"
+                            f"Tone: {form_data['tone']}\n\n"
+                            "Return output as:\nSubject: <subject line>\n<email body>"
+                        )
+                    else:
+                        system_prompt = (
+                            "You are a cold email expert. Write concise, polished outreach emails "
+                            "(110-150 words) that sound human and confident. Avoid hype and jargon."
+                        )
+                        user_prompt = (
+                            "Write a cold email based on this info:\n"
+                            f"About me: {form_data['about_you']}\n"
+                            f"Target company: {form_data['target_company']}\n"
+                            f"Target role/person: {form_data['target_role']}\n"
+                            f"Purpose: {form_data['purpose']}\n"
+                            f"Relevance: {form_data['why_fit']}\n"
+                            f"Achievement: {form_data['achievement']}\n"
+                            f"Impact: {form_data['impact']}\n"
+                            f"Skills: {form_data['skills']}\n"
+                            f"Projects: {form_data['projects']}\n"
+                            f"CTA: {form_data['cta']}\n"
+                            f"Tone: {form_data['tone']}\n\n"
+                            "Return output as:\nSubject: <subject line>\n<email body>"
+                        )
                     response = client.chat.completions.create(
                         model=config.openai_model,
                         messages=[
@@ -195,13 +269,265 @@ def cold_email():
                     output = _split_subject_body(text, default_subject)
                     used_openai = True
                 except Exception:
-                    output = _build_cold_email_fallback(form_data)
+                    output = _build_cold_email_fallback(form_data, mode)
                     flash('⚠️ AI unavailable. Using a polished template instead.', 'warning')
             else:
-                output = _build_cold_email_fallback(form_data)
+                output = _build_cold_email_fallback(form_data, mode)
                 flash('💡 OpenAI key not configured. Using a polished template instead.', 'info')
 
-    return render_template('cold_email.html', user=current_user, form=form_data, output=output, used_openai=used_openai)
+    return render_template('cold_email.html', user=current_user, form=form_data, output=output, used_openai=used_openai, mode=mode)
+
+
+@app.route('/cold-email-options')
+@login_required
+def cold_email_options():
+    return render_template('cold_email_options.html', user=current_user)
+
+
+@app.route('/cold-email-campaign', methods=['GET', 'POST'])
+@login_required
+def cold_email_campaign():
+    """Generate a cold email, then leads, then Gmail drafts using that email."""
+    mode = request.args.get('mode') or request.form.get('mode') or 'general'
+    if mode not in ['general', 'job']:
+        mode = 'general'
+
+    form_data = {
+        'about_you': '',
+        'signature_name': '',
+        'target_company': '',
+        'target_role': '',
+        'purpose': '',
+        'why_fit': '',
+        'achievement': '',
+        'impact': '',
+        'skills': '',
+        'projects': '',
+        'cta': '',
+        'tone': 'confident',
+        'custom_subject': ''
+    }
+
+    campaign_email = session.get('campaign_email')
+    if campaign_email and campaign_email.get('form'):
+        form_data.update(campaign_email['form'])
+    lead_summary = None
+    gmail_result = None
+
+    if request.method == 'POST':
+        action = request.form.get('action', '')
+        if action == 'generate_email':
+            for key in form_data.keys():
+                form_data[key] = request.form.get(key, '').strip()
+
+        if action == 'generate_email':
+            required_fields = ['about_you', 'target_company', 'purpose']
+            if mode == 'job':
+                required_fields = ['about_you', 'target_company', 'target_role']
+            missing = [field for field in required_fields if not form_data[field]]
+            if missing:
+                if mode == 'job':
+                    flash('Please fill in: about you, target company, and target role.', 'error')
+                else:
+                    flash('Please fill in: about you, target company, and purpose.', 'error')
+            else:
+                purpose = form_data.get('purpose') or form_data.get('target_company')
+                default_subject = form_data.get('custom_subject') or f"Quick note about {purpose}"
+                openai_key = current_user.get_api_key('openai') or os.getenv('OPENAI_API_KEY')
+                output = None
+                used_openai = False
+
+                if openai_key:
+                    try:
+                        config = load_config('config.yaml')
+                        from openai import OpenAI
+                        client = OpenAI(api_key=openai_key)
+                        if mode == 'job':
+                            system_prompt = (
+                                "You are a job-seeker cold email expert. Write concise, polished outreach emails "
+                                "(110-150 words) that sound human and confident. Avoid hype and jargon."
+                            )
+                            user_prompt = (
+                                "Write a job-seeker outreach email based on this info:\n"
+                                f"About me: {form_data['about_you']}\n"
+                                f"Target company: {form_data['target_company']}\n"
+                                f"Target role: {form_data['target_role']}\n"
+                                f"Why I fit: {form_data['why_fit']}\n"
+                                f"Achievement: {form_data['achievement']}\n"
+                                f"Impact: {form_data['impact']}\n"
+                                f"Skills: {form_data['skills']}\n"
+                                f"Projects: {form_data['projects']}\n"
+                                f"CTA: {form_data['cta']}\n"
+                                f"Tone: {form_data['tone']}\n\n"
+                                "Return output as:\nSubject: <subject line>\n<email body>"
+                            )
+                        else:
+                            system_prompt = (
+                                "You are a cold email expert. Write concise, polished outreach emails "
+                                "(110-150 words) that sound human and confident. Avoid hype and jargon."
+                            )
+                            user_prompt = (
+                                "Write a cold email based on this info:\n"
+                                f"About me: {form_data['about_you']}\n"
+                                f"Target company: {form_data['target_company']}\n"
+                                f"Target role/person: {form_data['target_role']}\n"
+                                f"Purpose: {form_data['purpose']}\n"
+                                f"Relevance: {form_data['why_fit']}\n"
+                                f"Achievement: {form_data['achievement']}\n"
+                                f"Impact: {form_data['impact']}\n"
+                                f"Skills: {form_data['skills']}\n"
+                                f"Projects: {form_data['projects']}\n"
+                                f"CTA: {form_data['cta']}\n"
+                                f"Tone: {form_data['tone']}\n\n"
+                                "Return output as:\nSubject: <subject line>\n<email body>"
+                            )
+                        response = client.chat.completions.create(
+                            model=config.openai_model,
+                            messages=[
+                                {"role": "system", "content": system_prompt},
+                                {"role": "user", "content": user_prompt},
+                            ],
+                            temperature=0.6,
+                            max_tokens=500,
+                        )
+                        text = response.choices[0].message.content.strip()
+                        output = _split_subject_body(text, default_subject)
+                        used_openai = True
+                    except Exception:
+                        output = _build_cold_email_fallback(form_data, mode)
+                        flash('⚠️ AI unavailable. Using a polished template instead.', 'warning')
+                else:
+                    output = _build_cold_email_fallback(form_data, mode)
+                    flash('💡 OpenAI key not configured. Using a polished template instead.', 'info')
+
+                if output:
+                    campaign_email = {
+                        'subject': output['subject'],
+                        'body': output['body'],
+                        'mode': mode,
+                        'form': form_data
+                    }
+                    session['campaign_email'] = campaign_email
+                    flash('✅ Cold email generated. Next: generate leads.', 'success')
+
+        elif action == 'generate_leads':
+            campaign_email = session.get('campaign_email')
+            if not campaign_email:
+                flash('Please generate a cold email first.', 'error')
+            else:
+                company_name = request.form.get('company_name', '').strip()
+                domain = request.form.get('domain', '').strip()
+                domain_type = request.form.get('domain_type', 'product_management').strip()
+                create_gmail = request.form.get('create_gmail') == 'on'
+
+                if not domain:
+                    flash('Domain is required', 'error')
+                    return render_template(
+                        'cold_email_campaign.html',
+                        user=current_user,
+                        mode=mode,
+                        form=form_data,
+                        campaign_email=campaign_email,
+                        lead_summary=lead_summary,
+                        gmail_result=gmail_result,
+                    )
+
+                if not email_finder.get_enabled_providers(current_user):
+                    flash('⚠️ No email providers configured. Add a provider key in Settings to find leads.', 'error')
+                    return redirect(url_for('settings'))
+
+                config = load_config('config.yaml')
+                if config.domains and domain_type in config.domains:
+                    domain_config = config.domains[domain_type]
+                    config.target_roles = domain_config['target_roles']
+
+                company = CompanyInput(name=company_name or domain, domain=normalize_domain(domain))
+
+                try:
+                    leads_raw = email_finder.find_leads(company.domain, domain_type, current_user)
+                except Exception as e:
+                    flash(f"⚠️ Could not fetch leads: {str(e)}. Please check your API keys in Settings.", "error")
+                    return redirect(url_for('settings'))
+
+                if not leads_raw:
+                    providers = email_finder.get_enabled_providers(current_user)
+                    provider_list = ', '.join(providers) if providers else 'none'
+                    flash(f"No leads found for {company.domain} using providers: {provider_list}.", "warning")
+                else:
+                    leads_filtered = filter_leads(leads_raw, config.target_roles, config.excluded_roles, config.min_email_confidence)
+                    leads_ranked = rank_leads(leads_filtered)
+
+                    if not leads_ranked:
+                        flash(f"No leads matched target roles for {domain_type}", "error")
+                    else:
+                        base_subject = campaign_email['subject']
+                        base_body = campaign_email['body']
+                        drafts = []
+                        for ranked in leads_ranked:
+                            lead = ranked.lead
+                            subject = _personalize_text(base_subject, lead)
+                            body = _personalize_text(base_body, lead)
+                            body = _ensure_greeting(body, lead)
+                            drafts.append(EmailDraft(subject=subject, body=body))
+
+                        write_markdown('send_sheet.md', leads_ranked, drafts)
+                        write_csv('send_sheet.csv', leads_ranked, drafts)
+
+                        if create_gmail:
+                            if not current_user.has_gmail_connected():
+                                flash('⚠️ Gmail not connected. Please connect your Gmail account first.', 'warning')
+                            else:
+                                gmail_token = current_user.get_gmail_token()
+                                if gmail_token:
+                                    draft_data_list = []
+                                    for ranked, draft in zip(leads_ranked, drafts):
+                                        lead = ranked.lead
+                                        draft_data_list.append({
+                                            'to': lead.email,
+                                            'subject': draft.subject,
+                                            'body': draft.body
+                                        })
+                                    gmail_result = gmail_service.create_drafts_bulk(gmail_token, draft_data_list)
+                                    if gmail_result['success'] > 0:
+                                        flash(f"✅ Created {gmail_result['success']} Gmail draft(s)!", 'success')
+                                    if gmail_result['failed'] > 0:
+                                        flash(f"⚠️ {gmail_result['failed']} draft(s) failed to create.", 'warning')
+                                else:
+                                    flash('⚠️ Gmail token expired. Please reconnect your Gmail account.', 'warning')
+
+                        lead_count = len(leads_ranked)
+                        lead_summary = {
+                            'count': lead_count,
+                            'domain': company.domain,
+                            'domain_type': domain_type
+                        }
+                        current_user.increment_usage(lead_count)
+
+                        search = Search(
+                            user_id=current_user.id,
+                            company_name=company_name or domain,
+                            domain=domain,
+                            domain_type=domain_type,
+                            lead_count=lead_count,
+                            csv_file='send_sheet.csv',
+                            md_file='send_sheet.md',
+                            success=True
+                        )
+                        db.session.add(search)
+                        db.session.commit()
+
+    if not campaign_email and session.get('campaign_email'):
+        campaign_email = session.get('campaign_email')
+
+    return render_template(
+        'cold_email_campaign.html',
+        user=current_user,
+        mode=mode,
+        form=form_data,
+        campaign_email=campaign_email,
+        lead_summary=lead_summary,
+        gmail_result=gmail_result,
+    )
 
 
 @app.route('/generate', methods=['POST'])

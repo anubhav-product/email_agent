@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Choose Your Outreach Type - LeadFinder AI</title>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #f5efe7;
+            --ink: #17212b;
+            --muted: #52616b;
+            --accent: #2f7a7a;
+            --accent-strong: #1f5f5f;
+            --accent-warm: #e07a5f;
+            --panel: #ffffff;
+            --panel-2: #fbf7f1;
+            --line: #e7ded3;
+            --shadow: 0 24px 60px rgba(23, 33, 43, 0.14);
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Space Grotesk', sans-serif; background: var(--bg); min-height: 100vh; padding: 36px 18px; color: var(--ink); }
+        .header { text-align: center; margin-bottom: 24px; }
+        .header h1 { font-size: 34px; font-weight: 700; margin-bottom: 8px; }
+        .header p { font-size: 14px; color: var(--muted); }
+        .nav { margin-top: 12px; display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; }
+        .nav a { color: var(--accent); text-decoration: none; background: #fdfbf8; padding: 8px 14px; border-radius: 999px; font-weight: 600; border: 1px solid var(--line); font-size: 12px; }
+        .container { background: var(--panel); padding: 36px; border-radius: 24px; box-shadow: var(--shadow); max-width: 960px; margin: 0 auto; }
+        .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+        .card { border: 1px solid var(--line); border-radius: 18px; padding: 22px; background: var(--panel-2); display: flex; flex-direction: column; gap: 10px; }
+        .card h2 { font-size: 18px; color: var(--ink); }
+        .card p { color: var(--muted); font-size: 13px; line-height: 1.6; }
+        .badge { align-self: flex-start; background: var(--accent); color: white; padding: 4px 10px; border-radius: 999px; font-size: 11px; font-weight: 700; }
+        .cta { margin-top: auto; }
+        .btn { display: inline-block; text-decoration: none; padding: 11px 16px; border-radius: 10px; font-weight: 600; color: white; background: linear-gradient(135deg, var(--accent), var(--accent-warm)); box-shadow: 0 10px 20px rgba(47, 122, 122, 0.2); }
+        .btn.secondary { background: white; color: var(--accent); border: 1.5px solid var(--accent); box-shadow: none; }
+        .note { margin-top: 18px; background: #fdfbf8; border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; font-size: 12px; color: var(--muted); }
+        @media (max-width: 1000px) { .grid { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Choose Your Outreach Type</h1>
+        <p>Pick the flow that matches your goal. You can switch any time.</p>
+        <div class="nav">
+            <a href="{{ url_for('index') }}">Generate Leads</a>
+            <a href="{{ url_for('settings') }}">Settings</a>
+            <a href="{{ url_for('gmail_setup') }}">Gmail</a>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="grid">
+            <div class="card">
+                <span class="badge">General</span>
+                <h2>General Outreach</h2>
+                <p>For partnerships, product demos, feedback requests, collaboration, or any business outreach.</p>
+                <p>You will get a reusable template to reuse or plug into campaigns.</p>
+                <div class="cta">
+                    <a class="btn" href="{{ url_for('cold_email', mode='general') }}">Start General Email</a>
+                </div>
+            </div>
+            <div class="card">
+                <span class="badge">Job Seeker</span>
+                <h2>Job Seeker Outreach</h2>
+                <p>For reaching hiring managers, recruiters, or teams about open roles.</p>
+                <p>Focuses on your target role, fit, and achievements.</p>
+                <div class="cta">
+                    <a class="btn secondary" href="{{ url_for('cold_email', mode='job') }}">Start Job Seeker Email</a>
+                </div>
+            </div>
+            <div class="card">
+                <span class="badge">Campaign</span>
+                <h2>Email → Leads → Gmail Drafts</h2>
+                <p>Generate one cold email, then find leads, then create Gmail drafts using that exact email.</p>
+                <p>Best for sending a consistent message at scale.</p>
+                <div class="cta">
+                    <a class="btn" href="{{ url_for('cold_email_campaign', mode='general') }}">Open Campaign Builder</a>
+                </div>
+            </div>
+        </div>
+        <div class="note">
+            Tip: If you want Gmail drafts, connect Gmail first. The wizard generates one polished email at a time.
+        </div>
+    </div>
+</body>
+</html>

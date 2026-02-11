@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cold Email Wizard - LeadFinder AI</title>
+    <title>Cold Email Campaign Builder - LeadFinder AI</title>
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -20,14 +20,15 @@
         }
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Space Grotesk', sans-serif; background: var(--bg); min-height: 100vh; padding: 36px 18px; color: var(--ink); }
-        .header { text-align: center; margin-bottom: 26px; }
-        .header h1 { font-size: 36px; font-weight: 700; margin-bottom: 8px; }
-        .header p { font-size: 15px; color: var(--muted); }
-        .nav { margin-top: 14px; display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; }
+        .header { text-align: center; margin-bottom: 22px; }
+        .header h1 { font-size: 34px; font-weight: 700; margin-bottom: 8px; }
+        .header p { font-size: 14px; color: var(--muted); }
+        .nav { margin-top: 12px; display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; }
         .nav a { color: var(--accent); text-decoration: none; background: #fdfbf8; padding: 8px 14px; border-radius: 999px; font-weight: 600; border: 1px solid var(--line); font-size: 12px; }
-        .container { background: var(--panel); padding: 36px; border-radius: 24px; box-shadow: var(--shadow); max-width: 900px; margin: 0 auto; }
-        .section { margin-bottom: 28px; }
-        .section h2 { font-size: 17px; color: var(--ink); margin-bottom: 10px; }
+        .container { background: var(--panel); padding: 36px; border-radius: 24px; box-shadow: var(--shadow); max-width: 1000px; margin: 0 auto; }
+        .section { margin-bottom: 24px; padding-bottom: 24px; border-bottom: 1px solid var(--line); }
+        .section:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+        .section h2 { font-size: 16px; color: var(--ink); margin-bottom: 10px; }
         .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
         .form-group { margin-bottom: 16px; }
         label { display: block; margin-bottom: 6px; color: var(--ink); font-weight: 600; font-size: 13px; }
@@ -40,24 +41,25 @@
         .flash.error { background: #fde8e1; color: #9b3f2d; }
         .flash.info { background: #eef3f4; color: var(--accent-strong); }
         .flash.warning { background: #fff5e8; color: #8a4b00; }
-        button { width: 100%; padding: 14px; background: linear-gradient(135deg, var(--accent), var(--accent-warm)); color: white; border: none; border-radius: 12px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s ease; box-shadow: 0 12px 20px rgba(47, 122, 122, 0.2); }
-        button:hover { transform: translateY(-1px); box-shadow: 0 16px 26px rgba(47, 122, 122, 0.26); }
-        .output { margin-top: 20px; background: var(--panel-2); border-radius: 16px; padding: 18px; border: 1px solid var(--line); }
-        .output h3 { font-size: 15px; color: var(--ink); margin-bottom: 10px; }
+        .btn { width: 100%; padding: 14px; background: linear-gradient(135deg, var(--accent), var(--accent-warm)); color: white; border: none; border-radius: 12px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s ease; box-shadow: 0 12px 20px rgba(47, 122, 122, 0.2); }
+        .btn:hover { transform: translateY(-1px); box-shadow: 0 16px 26px rgba(47, 122, 122, 0.26); }
+        .btn:disabled { background: #c9c9c9; cursor: not-allowed; box-shadow: none; transform: none; }
+        .note { background: #fdfbf8; border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; margin-bottom: 16px; font-size: 12px; color: var(--muted); }
+        .output { margin-top: 16px; background: var(--panel-2); border-radius: 16px; padding: 18px; border: 1px solid var(--line); }
+        .output h3 { font-size: 14px; color: var(--ink); margin-bottom: 10px; }
         .output pre { white-space: pre-wrap; font-family: 'Courier New', monospace; font-size: 12px; line-height: 1.6; color: var(--muted); }
-        .copy-row { display: flex; gap: 10px; margin-top: 10px; }
-        .copy-btn { padding: 10px 12px; background: var(--accent); border-radius: 8px; color: white; font-weight: 600; border: none; cursor: pointer; }
-        .note { background: #fdfbf8; border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; margin-bottom: 18px; font-size: 12px; color: var(--muted); }
+        .actions { display: flex; gap: 10px; flex-wrap: wrap; }
+        .actions a { text-decoration: none; font-weight: 600; color: var(--accent); }
         @media (max-width: 800px) { .grid { grid-template-columns: 1fr; } }
     </style>
 </head>
 <body>
     <div class="header">
-        <h1>✍️ Cold Email Wizard</h1>
-        <p>Answer a few questions and get a polished outreach email in seconds.</p>
+        <h1>Cold Email Campaign Builder</h1>
+        <p>Generate a cold email, then leads, then create Gmail drafts from that email.</p>
         <div class="nav">
             <a href="{{ url_for('index') }}">Generate Leads</a>
-            <a href="{{ url_for('cold_email_options') }}">Choose Mode</a>
+            <a href="{{ url_for('cold_email_options') }}">Cold Email Wizard</a>
             <a href="{{ url_for('settings') }}">Settings</a>
             <a href="{{ url_for('gmail_setup') }}">Gmail</a>
         </div>
@@ -73,15 +75,22 @@
         {% endwith %}
 
         {% set is_job = mode == 'job' %}
-
         <div class="note">
-            Mode: <strong>{% if is_job %}Job Seeker{% else %}General Outreach{% endif %}</strong>. General outreach gives you a reusable template. For lead-specific drafts, use the Campaign Builder.
+            Mode: <strong>{% if is_job %}Job Seeker{% else %}General Outreach{% endif %}</strong>. Use this flow if you want one cold email applied to multiple leads.
+            <div style="margin-top: 8px;">
+                {% if is_job %}
+                <a href="{{ url_for('cold_email_campaign', mode='general') }}">Switch to General</a>
+                {% else %}
+                <a href="{{ url_for('cold_email_campaign', mode='job') }}">Switch to Job Seeker</a>
+                {% endif %}
+            </div>
         </div>
 
-        <form method="POST" action="{{ url_for('cold_email') }}">
-            <input type="hidden" name="mode" value="{{ mode }}">
-            <div class="section">
-                <h2>About You</h2>
+        <div class="section">
+            <h2>Step 1: Generate Cold Email</h2>
+            <form method="POST" action="{{ url_for('cold_email_campaign') }}">
+                <input type="hidden" name="action" value="generate_email">
+                <input type="hidden" name="mode" value="{{ mode }}">
                 <div class="grid">
                     <div class="form-group">
                         <label for="about_you">Short intro *</label>
@@ -96,17 +105,13 @@
                 <div class="grid">
                     <div class="form-group">
                         <label for="skills">Skills</label>
-                        <input type="text" id="skills" name="skills" placeholder="e.g., roadmap, analytics, experimentation" value="{{ form.skills }}">
+                        <input type="text" id="skills" name="skills" placeholder="e.g., growth, analytics, partnerships" value="{{ form.skills }}">
                     </div>
                     <div class="form-group">
                         <label for="projects">Projects</label>
-                        <input type="text" id="projects" name="projects" placeholder="e.g., launched pricing revamp" value="{{ form.projects }}">
+                        <input type="text" id="projects" name="projects" placeholder="e.g., launched onboarding revamp" value="{{ form.projects }}">
                     </div>
                 </div>
-            </div>
-
-            <div class="section">
-                <h2>Target & Intent</h2>
                 <div class="grid">
                     <div class="form-group">
                         <label for="target_company">Target company *</label>
@@ -157,32 +162,77 @@
                     <label for="custom_subject">Custom subject</label>
                     <input type="text" id="custom_subject" name="custom_subject" placeholder="Optional subject line" value="{{ form.custom_subject }}">
                 </div>
-            </div>
+                <button type="submit" class="btn">Generate Cold Email</button>
+            </form>
 
-            <button type="submit">✨ Generate Polished Email</button>
-        </form>
-
-        {% if output %}
-        <div class="output">
-            <h3>Subject</h3>
-            <pre id="subject-text">{{ output.subject }}</pre>
-            <div class="copy-row">
-                <button class="copy-btn" type="button" onclick="copyText('subject-text')">Copy Subject</button>
+            {% if campaign_email %}
+            <div class="output">
+                <h3>Generated Subject</h3>
+                <pre>{{ campaign_email.subject }}</pre>
+                <h3 style="margin-top: 12px;">Generated Body</h3>
+                <pre>{{ campaign_email.body }}</pre>
             </div>
-            <h3 style="margin-top: 16px;">Email</h3>
-            <pre id="body-text">{{ output.body }}</pre>
-            <div class="copy-row">
-                <button class="copy-btn" type="button" onclick="copyText('body-text')">Copy Email</button>
-            </div>
+            {% endif %}
         </div>
-        {% endif %}
-    </div>
 
-    <script>
-        function copyText(id) {
-            const text = document.getElementById(id).innerText;
-            navigator.clipboard.writeText(text);
-        }
-    </script>
+        <div class="section">
+            <h2>Step 2: Generate Leads & Create Drafts</h2>
+            <form method="POST" action="{{ url_for('cold_email_campaign') }}">
+                <input type="hidden" name="action" value="generate_leads">
+                <input type="hidden" name="mode" value="{{ mode }}">
+                <div class="grid">
+                    <div class="form-group">
+                        <label for="company_name">Company Name (Optional)</label>
+                        <input type="text" id="company_name" name="company_name" placeholder="e.g., Stripe">
+                    </div>
+                    <div class="form-group">
+                        <label for="domain">Company Domain *</label>
+                        <input type="text" id="domain" name="domain" placeholder="stripe.com" required>
+                        <small>Results are cached for 7 days to speed up repeat searches.</small>
+                    </div>
+                </div>
+                <div class="grid">
+                    <div class="form-group">
+                        <label for="domain_type">Career Domain</label>
+                        <select id="domain_type" name="domain_type">
+                            <option value="product_management">Product Management</option>
+                            <option value="consulting">Consulting & Strategy</option>
+                            <option value="engineering">Software Engineering</option>
+                            <option value="data_science">Data Science & Analytics</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Gmail Draft Creation</label>
+                        <div style="background: {% if user.has_gmail_connected() %}#e8f5e9{% else %}#fff3cd{% endif %}; border: 2px solid {% if user.has_gmail_connected() %}#4caf50{% else %}#ffc107{% endif %}; padding: 12px; border-radius: 10px;">
+                            <input type="checkbox" id="create_gmail" name="create_gmail" {% if user.has_gmail_connected() %}checked{% else %}disabled{% endif %}>
+                            <label for="create_gmail" style="display: inline; margin-left: 8px;">
+                                {% if user.has_gmail_connected() %}Create drafts in Gmail{% else %}Gmail not connected{% endif %}
+                            </label>
+                        </div>
+                        {% if not user.has_gmail_connected() %}
+                        <small>Connect Gmail in Settings to enable drafts.</small>
+                        {% endif %}
+                    </div>
+                </div>
+                <button type="submit" class="btn" {% if not campaign_email %}disabled{% endif %}>Generate Leads & Drafts</button>
+                {% if not campaign_email %}
+                <small>Generate the cold email first to enable this step.</small>
+                {% endif %}
+            </form>
+
+            {% if lead_summary %}
+            <div class="output">
+                <h3>Results</h3>
+                <p>Leads found: <strong>{{ lead_summary.count }}</strong></p>
+                <p>Domain: <strong>{{ lead_summary.domain }}</strong></p>
+                <div class="actions">
+                    <a href="{{ url_for('download', filename='send_sheet.csv') }}">Download CSV</a>
+                    <a href="{{ url_for('download', filename='send_sheet.md') }}">Download Markdown</a>
+                    <a href="https://mail.google.com/mail/u/0/#drafts" target="_blank">Open Gmail Drafts</a>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
 </body>
 </html>

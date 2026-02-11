@@ -4,23 +4,35 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>LeadFinder AI - Cold Email Automation Platform</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --bg: #f5efe7;
+            --ink: #17212b;
+            --muted: #52616b;
+            --accent: #2f7a7a;
+            --accent-strong: #1f5f5f;
+            --accent-warm: #e07a5f;
+            --panel: #ffffff;
+            --panel-2: #fbf7f1;
+            --line: #e7ded3;
+            --shadow: 0 24px 60px rgba(23, 33, 43, 0.14);
+        }
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Inter', sans-serif; color: #1a1a1a; }
+        body { font-family: 'Space Grotesk', sans-serif; color: var(--ink); background: var(--bg); }
         
         /* Navigation */
-        .nav { background: white; padding: 20px 40px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); position: sticky; top: 0; z-index: 100; }
+        .nav { background: var(--panel); padding: 18px 36px; box-shadow: var(--shadow); position: sticky; top: 0; z-index: 100; }
         .nav-content { max-width: 1400px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; }
-        .logo { font-size: 24px; font-weight: 800; color: #667eea; display: flex; align-items: center; gap: 10px; }
+        .logo { font-size: 22px; font-weight: 800; color: var(--accent); display: flex; align-items: center; gap: 10px; }
         .nav-links { display: flex; gap: 30px; align-items: center; }
-        .nav-links a { color: #666; text-decoration: none; font-weight: 500; transition: color 0.3s; }
-        .nav-links a:hover { color: #667eea; }
-        .nav-btn { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 12px 28px; border-radius: 8px; font-weight: 600; }
-        .nav-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4); }
+        .nav-links a { color: var(--muted); text-decoration: none; font-weight: 600; transition: color 0.3s; }
+        .nav-links a:hover { color: var(--accent); }
+        .nav-btn { background: linear-gradient(135deg, var(--accent), var(--accent-warm)); color: white; padding: 12px 24px; border-radius: 999px; font-weight: 700; }
+        .nav-btn:hover { transform: translateY(-2px); box-shadow: 0 12px 20px rgba(47, 122, 122, 0.2); }
         
         /* Hero Section */
-        .hero { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 120px 40px; text-align: center; color: white; position: relative; overflow: hidden; }
+        .hero { background: linear-gradient(125deg, #19343a 0%, #2f7a7a 55%, #e07a5f 120%); padding: 120px 40px; text-align: center; color: white; position: relative; overflow: hidden; }
         .hero::before { content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: url('data:image/svg+xml,<svg width="100" height="100" xmlns="http://www.w3.org/2000/svg"><circle cx="50" cy="50" r="2" fill="rgba(255,255,255,0.1)"/></svg>'); opacity: 0.3; }
         .hero-content { max-width: 900px; margin: 0 auto; position: relative; z-index: 1; }
         .hero h1 { font-size: 64px; font-weight: 900; margin-bottom: 24px; line-height: 1.1; }
@@ -28,7 +40,7 @@
         .hero .description { font-size: 18px; opacity: 0.9; margin-bottom: 40px; line-height: 1.6; }
         .hero-cta { display: flex; gap: 20px; justify-content: center; margin-bottom: 40px; }
         .btn { padding: 18px 40px; border-radius: 12px; font-weight: 700; font-size: 17px; text-decoration: none; transition: all 0.3s; display: inline-block; }
-        .btn-white { background: white; color: #667eea; box-shadow: 0 4px 20px rgba(0,0,0,0.2); }
+        .btn-white { background: white; color: var(--accent); box-shadow: 0 4px 20px rgba(0,0,0,0.2); }
         .btn-white:hover { transform: translateY(-3px); box-shadow: 0 6px 30px rgba(0,0,0,0.3); }
         .btn-outline { background: transparent; color: white; border: 3px solid white; }
         .btn-outline:hover { background: rgba(255,255,255,0.1); }
@@ -38,55 +50,55 @@
         .hero-stat .label { font-size: 14px; opacity: 0.9; margin-top: 8px; }
         
         /* Problem Section */
-        .problem { background: #f5f7fa; padding: 100px 40px; }
-        .section-title { text-align: center; font-size: 48px; font-weight: 800; margin-bottom: 60px; color: #1a1a1a; }
+        .problem { background: var(--panel-2); padding: 100px 40px; }
+        .section-title { text-align: center; font-size: 48px; font-weight: 800; margin-bottom: 60px; color: var(--ink); }
         .problem-grid { max-width: 1200px; margin: 0 auto; display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 40px; }
-        .problem-card { background: white; padding: 40px; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.06); }
+        .problem-card { background: var(--panel); padding: 40px; border-radius: 20px; box-shadow: var(--shadow); }
         .problem-card .icon { font-size: 48px; margin-bottom: 20px; }
-        .problem-card h3 { font-size: 22px; margin-bottom: 12px; color: #e74c3c; }
-        .problem-card p { color: #666; line-height: 1.7; font-size: 16px; }
+        .problem-card h3 { font-size: 22px; margin-bottom: 12px; color: var(--accent-warm); }
+        .problem-card p { color: var(--muted); line-height: 1.7; font-size: 16px; }
         
         /* Solution Section */
-        .solution { padding: 100px 40px; background: white; }
+        .solution { padding: 100px 40px; background: var(--panel); }
         .solution-content { max-width: 1200px; margin: 0 auto; }
         .solution-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 50px; margin-top: 60px; }
         .solution-feature { display: flex; gap: 20px; }
         .solution-feature .icon { font-size: 40px; flex-shrink: 0; }
-        .solution-feature .content h3 { font-size: 22px; margin-bottom: 12px; color: #667eea; font-weight: 700; }
-        .solution-feature .content p { color: #666; line-height: 1.7; font-size: 16px; }
-        .solution-feature .content ul { margin-top: 12px; color: #666; line-height: 2; }
+        .solution-feature .content h3 { font-size: 22px; margin-bottom: 12px; color: var(--accent-strong); font-weight: 700; }
+        .solution-feature .content p { color: var(--muted); line-height: 1.7; font-size: 16px; }
+        .solution-feature .content ul { margin-top: 12px; color: var(--muted); line-height: 2; }
         .solution-feature .content ul li { position: relative; padding-left: 24px; }
-        .solution-feature .content ul li::before { content: '✓'; position: absolute; left: 0; color: #4caf50; font-weight: 800; }
+        .solution-feature .content ul li::before { content: '✓'; position: absolute; left: 0; color: var(--accent); font-weight: 800; }
         
         /* How It Works */
-        .how-it-works { background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); padding: 100px 40px; }
+        .how-it-works { background: linear-gradient(135deg, #f9f6f0 0%, #efe7df 100%); padding: 100px 40px; }
         .steps { max-width: 1000px; margin: 60px auto 0; }
         .step { display: flex; gap: 30px; margin-bottom: 50px; align-items: start; }
-        .step-number { width: 80px; height: 80px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 36px; font-weight: 800; flex-shrink: 0; box-shadow: 0 4px 20px rgba(102, 126, 234, 0.4); }
+        .step-number { width: 80px; height: 80px; background: linear-gradient(135deg, var(--accent), var(--accent-warm)); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 36px; font-weight: 800; flex-shrink: 0; box-shadow: 0 10px 24px rgba(47, 122, 122, 0.22); }
         .step-content { flex: 1; }
         .step-content h3 { font-size: 26px; margin-bottom: 12px; color: #1a1a1a; font-weight: 700; }
-        .step-content p { color: #666; line-height: 1.7; font-size: 17px; }
+        .step-content p { color: var(--muted); line-height: 1.7; font-size: 17px; }
         
         /* Providers Section */
-        .providers { padding: 100px 40px; background: white; }
+        .providers { padding: 100px 40px; background: var(--panel); }
         .provider-grid { max-width: 1200px; margin: 60px auto 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 30px; }
-        .provider-card { background: #f8f9fa; padding: 35px; border-radius: 16px; text-align: center; transition: all 0.3s; border: 3px solid transparent; }
-        .provider-card:hover { border-color: #667eea; transform: translateY(-5px); box-shadow: 0 10px 30px rgba(102, 126, 234, 0.2); }
+        .provider-card { background: var(--panel-2); padding: 35px; border-radius: 18px; text-align: center; transition: all 0.3s; border: 1px solid var(--line); }
+        .provider-card:hover { border-color: var(--accent); transform: translateY(-5px); box-shadow: 0 14px 30px rgba(47, 122, 122, 0.2); }
         .provider-card .icon { font-size: 48px; margin-bottom: 16px; }
         .provider-card h3 { font-size: 20px; margin-bottom: 8px; color: #1a1a1a; font-weight: 700; }
-        .provider-card .free-badge { background: #4caf50; color: white; padding: 6px 16px; border-radius: 20px; font-size: 13px; font-weight: 700; display: inline-block; margin-bottom: 12px; }
-        .provider-card p { color: #666; font-size: 14px; line-height: 1.6; }
+        .provider-card .free-badge { background: var(--accent); color: white; padding: 6px 16px; border-radius: 20px; font-size: 13px; font-weight: 700; display: inline-block; margin-bottom: 12px; }
+        .provider-card p { color: var(--muted); font-size: 14px; line-height: 1.6; }
         
         /* CTA Section */
-        .cta { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 100px 40px; text-align: center; color: white; }
+        .cta { background: linear-gradient(125deg, #19343a 0%, #2f7a7a 55%, #e07a5f 120%); padding: 100px 40px; text-align: center; color: white; }
         .cta h2 { font-size: 52px; font-weight: 800; margin-bottom: 24px; }
         .cta p { font-size: 22px; margin-bottom: 40px; opacity: 0.95; }
         
         /* Footer */
-        .footer { background: #1a1a1a; color: white; padding: 60px 40px; text-align: center; }
+        .footer { background: #141c22; color: white; padding: 60px 40px; text-align: center; }
         .footer-content { max-width: 1200px; margin: 0 auto; }
         .footer p { opacity: 0.7; margin-bottom: 20px; }
-        .footer a { color: #667eea; text-decoration: none; margin: 0 15px; }
+        .footer a { color: var(--accent-warm); text-decoration: none; margin: 0 15px; }
         .footer a:hover { text-decoration: underline; }
         
         @media (max-width: 768px) {
@@ -126,7 +138,7 @@
             <div class="hero-cta">
                 <a href="{{ url_for('auth.signup') }}" class="btn btn-white">Start Free →</a>
                 <a href="#how-it-works" class="btn btn-outline">See How It Works</a>
-                <a href="{{ url_for('auth.login', next=url_for('cold_email')) }}" class="btn btn-outline">Run Cold Email Wizard</a>
+                <a href="{{ url_for('auth.login', next=url_for('cold_email_options')) }}" class="btn btn-outline">Run Cold Email Wizard</a>
             </div>
             <div class="hero-stats">
                 <div class="hero-stat">
