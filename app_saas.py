@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, send_file, jsonify, session
 from flask_login import login_required, current_user, login_user
 import os
+import json
 from dotenv import load_dotenv
 from datetime import datetime
 
@@ -15,7 +16,7 @@ from pm_outreach_agent.openai_client import OpenAIDraftClient, OpenAIDraftConfig
 from pm_outreach_agent.gmail_client import create_gmail_drafts
 
 # Import SaaS components
-from database import db, init_db, User, Search
+from database import db, init_db, User, Search, LeadCache
 from auth import auth_bp, init_auth
 
 # Import Gmail service
@@ -822,11 +823,47 @@ def dashboard():
     recent_searches = Search.query.filter_by(
         user_id=current_user.id
     ).order_by(Search.created_at.desc()).limit(10).all()
+
+    # Build a small lead preview list from cached results
+    leads_preview = []
+    seen_emails = set()
+    for search in recent_searches:
+        cache = LeadCache.query.filter_by(
+            domain=search.domain,
+            domain_type=search.domain_type
+        ).order_by(LeadCache.created_at.desc()).first()
+
+        if not cache or not cache.leads_data:
+            continue
+
+        try:
+            cached_leads = json.loads(cache.leads_data)
+        except (TypeError, json.JSONDecodeError):
+            continue
+
+        for lead in cached_leads:
+            email = lead.get('email')
+            if email and email in seen_emails:
+                continue
+            leads_preview.append({
+                'name': lead.get('full_name') or " ".join(filter(None, [lead.get('first_name'), lead.get('last_name')])).strip(),
+                'role': lead.get('role'),
+                'email': email,
+                'company': lead.get('company') or search.company_name or search.domain,
+                'confidence': lead.get('confidence'),
+                'source_domain': search.domain
+            })
+            if email:
+                seen_emails.add(email)
+            if len(leads_preview) >= 10:
+                break
+        if len(leads_preview) >= 10:
+            break
     
     # Use user's dashboard preference
     template = 'dashboard.html' if current_user.dashboard_view == 'premium' else 'dashboard_simple.html'
     
-    return render_template(template, user=current_user, searches=recent_searches)
+    return render_template(template, user=current_user, searches=recent_searches, leads_preview=leads_preview)
 
 
 @app.route('/toggle-dashboard')

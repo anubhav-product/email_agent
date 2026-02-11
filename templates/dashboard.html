@@ -148,6 +148,40 @@
             </div>
             {% endif %}
         </div>
+
+        <div class="section" style="margin-top: 28px;">
+            <h2>👥 Recent Leads</h2>
+
+            {% if leads_preview %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Role</th>
+                        <th>Email</th>
+                        <th>Company</th>
+                        <th>Source</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for lead in leads_preview %}
+                    <tr>
+                        <td>{{ lead.name or '—' }}</td>
+                        <td>{{ lead.role or '—' }}</td>
+                        <td>{{ lead.email or '—' }}</td>
+                        <td>{{ lead.company or '—' }}</td>
+                        <td>{{ lead.source_domain or '—' }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <div class="empty-state">
+                <div class="icon">📇</div>
+                <p style="font-size: 18px;">No leads yet. Generate leads to see them here.</p>
+            </div>
+            {% endif %}
+        </div>
     </div>
 </body>
 </html>

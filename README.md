@@ -59,6 +59,7 @@ Scale your job search with AI-powered outreach that discovers decision-makers, g
 - **[FEATURES.md](FEATURES.md)** - Complete feature overview and technical architecture
 - **[EXAMPLES.md](EXAMPLES.md)** - Multi-domain examples and workflow strategies  
 - **[DEPLOYMENT.md](DEPLOYMENT.md)** - Production deployment guide (Railway, Heroku, Render)
+- **[RENDER_DEPLOYMENT.md](RENDER_DEPLOYMENT.md)** - Render blueprint and Gmail OAuth setup
 
 ---
 
@@ -133,10 +134,33 @@ Open http://localhost:5000 in your browser. Select your target domain (PM/Consul
 ### Option 1: Web Interface (Recommended)
 
 ```bash
-python app.py
+python app_saas.py
 ```
 
 Open http://localhost:5000 in your browser. Enter company details, click generate, and review your drafts.
+
+---
+
+## ☁️ Deploy to Render (Blueprint)
+
+1. Push this repo to GitHub.
+2. In Render, click **New → Blueprint** and select the repo.
+3. Render will detect [render.yaml](render.yaml) and create the web service and database.
+4. In the web service, set environment variables:
+   - `SECRET_KEY`
+   - `FLASK_ENV=production`
+   - `PYTHON_VERSION=3.12.0`
+   - Optional provider keys: `HUNTER_API_KEY`, `APOLLO_API_KEY`, `OPENAI_API_KEY`
+
+### Gmail OAuth on Render (all features enabled)
+
+1. Base64-encode your `credentials.json`:
+   ```bash
+   cat credentials.json | base64
+   ```
+2. Add the result to Render env vars as `GOOGLE_CREDENTIALS_BASE64`.
+3. Add the redirect URI in Google Cloud Console:
+   `https://YOUR-SERVICE.onrender.com/oauth2callback`
 
 ### Option 2: Command Line
 

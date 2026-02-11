@@ -34,6 +34,29 @@ class GmailService:
                 os.path.dirname(__file__), 
                 self.CREDENTIALS_FILE
             )
+            self._ensure_credentials_file()
+
+    def _ensure_credentials_file(self) -> None:
+        """Create credentials.json from env var when running on hosts like Render."""
+        if not self.credentials_path:
+            return
+        if os.path.exists(self.credentials_path):
+            return
+
+        credentials_base64 = os.getenv('GOOGLE_CREDENTIALS_BASE64')
+        if not credentials_base64:
+            return
+
+        try:
+            decoded = base64.b64decode(credentials_base64)
+        except (ValueError, TypeError):
+            return
+
+        try:
+            with open(self.credentials_path, 'wb') as handle:
+                handle.write(decoded)
+        except OSError:
+            return
     
     def is_configured(self) -> bool:
         """Check if Gmail OAuth is configured (credentials.json exists)"""

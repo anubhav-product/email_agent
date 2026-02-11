@@ -107,6 +107,41 @@
             </p>
             {% endif %}
         </div>
+
+        <div style="background: rgba(255,255,255,0.05); border-radius: 16px; backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); padding: 2rem; margin-top: 2rem;">
+            <h2 style="color: white; font-size: 1.5rem; font-weight: 700; margin-bottom: 1.5rem;">Recent Leads</h2>
+
+            {% if leads_preview %}
+            <div style="overflow-x: auto;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Role</th>
+                            <th>Email</th>
+                            <th>Company</th>
+                            <th>Source</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for lead in leads_preview %}
+                        <tr>
+                            <td>{{ lead.name or '—' }}</td>
+                            <td>{{ lead.role or '—' }}</td>
+                            <td>{{ lead.email or '—' }}</td>
+                            <td>{{ lead.company or '—' }}</td>
+                            <td>{{ lead.source_domain or '—' }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p style="color: rgba(255,255,255,0.6); text-align: center; padding: 3rem;">
+                No leads yet. Generate leads to see them here.
+            </p>
+            {% endif %}
+        </div>
     </div>
 </body>
 </html>
