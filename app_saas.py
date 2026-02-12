@@ -4,6 +4,7 @@ import os
 import json
 from dotenv import load_dotenv
 from datetime import datetime
+from werkzeug.middleware.proxy_fix import ProxyFix
 
 from pm_outreach_agent.hunter_client import HunterClient
 from pm_outreach_agent.multi_provider_finder import email_finder
@@ -26,6 +27,16 @@ load_dotenv()
 
 app = Flask(__name__)
 app.secret_key = os.getenv('SECRET_KEY', os.urandom(24))
+
+is_production = os.getenv('FLASK_ENV') == 'production' or os.getenv('RENDER') == 'true'
+if is_production:
+    app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
+    app.config.update(
+        SESSION_COOKIE_SECURE=True,
+        SESSION_COOKIE_HTTPONLY=True,
+        SESSION_COOKIE_SAMESITE='Lax',
+        PREFERRED_URL_SCHEME='https'
+    )
 
 # Database configuration
 app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv(
@@ -68,6 +79,12 @@ def index():
     return render_template('index.html', user=current_user, 
                          provider_count=provider_count,
                          enabled_providers=enabled_providers)
+
+
+@app.route('/health')
+def health():
+    """Lightweight health check for Render."""
+    return jsonify(status='ok', timestamp=datetime.utcnow().isoformat() + 'Z')
 
 
 def _build_cold_email_fallback(form_data: dict, mode: str) -> dict:
