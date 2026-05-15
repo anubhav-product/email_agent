@@ -1576,12 +1576,6 @@ def gmail_oauth_callback():
     except Exception as e:
         flash(f'❌ Error handling Gmail callback: {str(e)}', 'error')
         return redirect(url_for('gmail_setup'))
-        
-    except Exception as e:
-        flash(f'❌ Error connecting Gmail: {str(e)}', 'error')
-        return redirect(url_for('login'))
-    
-    return redirect(url_for('gmail_setup'))
 
 
 @app.route('/gmail-enter-code', methods=['GET', 'POST'])
