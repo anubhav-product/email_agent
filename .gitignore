@@ -68,6 +68,7 @@ results/
 
 # OAuth credentials (sensitive)
 credentials.json
+googke.json/
 token.pickle
 token.json
 

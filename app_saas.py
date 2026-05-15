@@ -1490,28 +1490,26 @@ def gmail_setup():
 @app.route('/connect-gmail')
 @login_required
 def connect_gmail():
-    """Initiate Gmail OAuth flow (simple code-based flow)"""
+    """Initiate Gmail OAuth flow with a redirect callback."""
     if not gmail_service.is_configured():
         flash('⚠️ Gmail OAuth not configured. Please complete the setup steps first.', 'warning')
         return redirect(url_for('gmail_setup'))
-    
+
     try:
-        # Generate simple OAuth flow (no redirect URI needed!)
-        result = gmail_service.get_simple_auth_flow()
-        
+        redirect_uri = url_for('gmail_oauth_callback', _external=True)
+        result = gmail_service.get_oauth_url(redirect_uri)
+
         if not result:
-            flash('❌ Error generating OAuth URL. Please try again.', 'error')
+            flash('❌ Error generating Gmail authorization URL. Please try again.', 'error')
             return redirect(url_for('gmail_setup'))
-        
-        flow, authorization_url = result
-        
-        # Store only necessary data in session (Flow can't be pickled)
+
+        authorization_url, state = result
         session['oauth_user_id'] = current_user.id
+        session['oauth_state'] = state
         session['gmail_auth_url'] = authorization_url
-        
-        # Redirect to code entry page (user will click link there)
-        return redirect(url_for('gmail_enter_code'))
-        
+
+        return redirect(authorization_url)
+
     except Exception as e:
         flash(f'❌ Error initiating Gmail OAuth: {str(e)}', 'error')
         return redirect(url_for('gmail_setup'))
@@ -1519,69 +1517,64 @@ def connect_gmail():
 
 @app.route('/oauth2callback')
 def gmail_oauth_callback():
-    """Handle OAuth callback - Google shows code, user pastes it"""
-    # Get authorization code from query params
-    code = request.args.get('code')
+    """Handle OAuth callback from Google and store Gmail tokens."""
     error = request.args.get('error')
-    
-    user_id = session.get('oauth_user_id')
-    flow_data = session.get('gmail_flow')
-    
-    # Handle errors
     if error:
         flash(f'⚠️ OAuth error: {error}', 'warning')
-        return redirect(url_for('login'))
-    
-    if not user_id or not flow_data:
-        flash('⚠️ Session expired. Please try connecting again.', 'warning')
-        return redirect(url_for('login'))
-    
-    # Get user from stored ID
+        return redirect(url_for('gmail_setup'))
+
+    user_id = session.get('oauth_user_id')
+    saved_state = session.get('oauth_state')
+    if not user_id or not saved_state:
+        flash('⚠️ OAuth session expired. Please try connecting again.', 'warning')
+        return redirect(url_for('gmail_setup'))
+
+    state = request.args.get('state')
+    if not state or state != saved_state:
+        session.pop('oauth_state', None)
+        session.pop('oauth_user_id', None)
+        flash('⚠️ Invalid OAuth state. Please try again.', 'warning')
+        return redirect(url_for('gmail_setup'))
+
     user = User.query.get(user_id)
     if not user:
+        session.pop('oauth_state', None)
+        session.pop('oauth_user_id', None)
         flash('⚠️ User not found. Please log in again.', 'warning')
-        return redirect(url_for('login'))
-    
-    # If no code, show instructions to get it
-    if not code:
-        # Google will show code on screen, render page asking user to paste it
-        return render_template('gmail_code_input.html')
-    
+        return redirect(url_for('auth.login'))
+
     try:
-        # Restore flow from session
-        import pickle
-        import base64
-        flow = pickle.loads(base64.b64decode(flow_data))
-        
-        # Exchange code for credentials
-        credentials_json = gmail_service.exchange_code_for_token(flow, code)
-        
+        redirect_uri = url_for('gmail_oauth_callback', _external=True)
+        credentials_json = gmail_service.handle_oauth_callback(
+            state,
+            redirect_uri,
+            request.url
+        )
+
         if not credentials_json:
-            flash('❌ Error exchanging code for token. Please try again.', 'error')
-            return redirect(url_for('login'))
-        
-        # Store credentials in database (encrypted)
+            flash('❌ Error exchanging authorization code for Gmail token.', 'error')
+            return redirect(url_for('gmail_setup'))
+
         user.set_gmail_token(credentials_json)
         db.session.commit()
-        
-        # Re-establish user session (log user back in)
         login_user(user, remember=True)
-        
-        # Clear OAuth session data
-        session.pop('gmail_flow', None)
+        session.pop('oauth_state', None)
         session.pop('oauth_user_id', None)
-        
-        # Test the connection
+        session.pop('gmail_auth_url', None)
+
         if gmail_service.test_connection(credentials_json):
-            # Get user info for confirmation
             user_info = gmail_service.get_user_info(credentials_json)
             if user_info:
                 flash(f'✅ Gmail connected successfully! Account: {user_info["email"]}', 'success')
             else:
                 flash('✅ Gmail connected successfully! You can now create email drafts automatically.', 'success')
         else:
-            flash('⚠️ Gmail connected but connection test failed. You may need to reconnect.', 'warning')
-        
+            flash('⚠️ Gmail connected but connection test failed. Please reconnect if needed.', 'warning')
+
+        return redirect(url_for('gmail_setup'))
+
+    except Exception as e:
+        flash(f'❌ Error handling Gmail callback: {str(e)}', 'error')
         return redirect(url_for('gmail_setup'))
         
     except Exception as e:

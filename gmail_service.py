@@ -28,41 +28,56 @@ class GmailService:
     def __init__(self, app=None):
         """Initialize Gmail service"""
         self.app = app
-        self.credentials_path = None
+        self.credentials_path = os.path.join(
+            os.path.dirname(__file__),
+            self.CREDENTIALS_FILE
+        )
         if app:
-            self.credentials_path = os.path.join(
-                os.path.dirname(__file__), 
-                self.CREDENTIALS_FILE
-            )
             self._ensure_credentials_file()
 
     def _ensure_credentials_file(self) -> None:
-        """Create credentials.json from env var when running on hosts like Render."""
+        """Create or locate a credentials file for Gmail OAuth."""
         if not self.credentials_path:
-            return
+            self.credentials_path = os.path.join(
+                os.path.dirname(__file__),
+                self.CREDENTIALS_FILE
+            )
+
         if os.path.exists(self.credentials_path):
             return
 
         credentials_base64 = os.getenv('GOOGLE_CREDENTIALS_BASE64')
-        if not credentials_base64:
-            return
+        if credentials_base64:
+            try:
+                decoded = base64.b64decode(credentials_base64)
+                with open(self.credentials_path, 'wb') as handle:
+                    handle.write(decoded)
+                return
+            except (ValueError, TypeError, OSError):
+                return
 
-        try:
-            decoded = base64.b64decode(credentials_base64)
-        except (ValueError, TypeError):
-            return
+        fallback_dir = os.path.join(os.path.dirname(__file__), 'googke.json')
+        if os.path.isdir(fallback_dir):
+            for filename in sorted(os.listdir(fallback_dir)):
+                if filename.endswith('.json'):
+                    candidate = os.path.join(fallback_dir, filename)
+                    if os.path.isfile(candidate):
+                        self.credentials_path = candidate
+                        return
 
-        try:
-            with open(self.credentials_path, 'wb') as handle:
-                handle.write(decoded)
-        except OSError:
-            return
-    
     def is_configured(self) -> bool:
-        """Check if Gmail OAuth is configured (credentials.json exists)"""
+        """Check if Gmail OAuth is configured via credentials file or environment."""
         if not self.credentials_path:
-            return False
-        return os.path.exists(self.credentials_path)
+            self.credentials_path = os.path.join(
+                os.path.dirname(__file__),
+                self.CREDENTIALS_FILE
+            )
+
+        if os.path.exists(self.credentials_path):
+            return True
+
+        self._ensure_credentials_file()
+        return bool(self.credentials_path and os.path.exists(self.credentials_path))
     
     def get_simple_auth_flow(self) -> Optional[tuple]:
         """
